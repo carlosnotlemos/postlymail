@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="br.com.postlymail.controller.VendasController"
+      spacing="20">
+
+    <HBox alignment="CENTER_LEFT">
+        <Label text="Vendas Realizadas" styleClass="view-title" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="+ Nova Venda" styleClass="button-primary" onAction="#handleNovaVenda" />
+    </HBox>
+
+    <VBox styleClass="card" VBox.vgrow="ALWAYS">
+        <StackPane VBox.vgrow="ALWAYS">
+            <TableView fx:id="tableVendas" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colData" text="Data" prefWidth="180" />
+                    <TableColumn fx:id="colCliente" text="Cliente" prefWidth="350" />
+                    <TableColumn fx:id="colValor" text="Total" prefWidth="150" />
+                    <TableColumn fx:id="colAcoes" text="Ações" prefWidth="120" />
+                </columns>
+            </TableView>
+            <ProgressIndicator fx:id="progressLoading" maxWidth="50" maxHeight="50" visible="false" />
+        </StackPane>
+    </VBox>
+
+</VBox>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="20" styleClass="card" 
+      prefWidth="800" prefHeight="600"
+      stylesheets="@../css/style.css">
+
+    <padding>
+        <Insets top="25" right="25" bottom="25" left="25"/>
+    </padding>
+
+    <Label text="Lançar Nova Venda" styleClass="view-title" style="-fx-font-size: 24px;" />
+
+    <HBox spacing="20">
+        <!-- Coluna Esquerda: Dados da Venda -->
+        <VBox spacing="15" HBox.hgrow="ALWAYS">
+            <VBox spacing="5">
+                <Label text="Selecione o Cliente" style="-fx-text-fill: #bac2de;" />
+                <ComboBox fx:id="cbCliente" promptText="Buscar cliente..." maxWidth="Infinity" styleClass="combo-box-premium" />
+            </VBox>
+
+            <Separator style="-fx-opacity: 0.1;" />
+
+            <Label text="Adicionar Produtos" styleClass="card-title" />
+            <HBox spacing="10" alignment="BOTTOM_LEFT">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Produto" style="-fx-text-fill: #a6adc8; -fx-font-size: 12px;" />
+                    <ComboBox fx:id="cbProduto" promptText="Selecione..." maxWidth="Infinity" />
+                </VBox>
+                <VBox spacing="5" prefWidth="80">
+                    <Label text="Qtd" style="-fx-text-fill: #a6adc8; -fx-font-size: 12px;" />
+                    <TextField fx:id="txtQuantidade" text="1" />
+                </VBox>
+                <Button text="+" onAction="#handleAdicionarItem" styleClass="button-primary" style="-fx-padding: 8 15;" />
+            </HBox>
+
+            <TableView fx:id="tableItems" VBox.vgrow="ALWAYS" prefHeight="200">
+                <columns>
+                    <TableColumn fx:id="colItemProduto" text="Produto" prefWidth="200" />
+                    <TableColumn fx:id="colItemPreco" text="Preço Unit." prefWidth="100" />
+                    <TableColumn fx:id="colItemQtd" text="Qtd" prefWidth="60" />
+                    <TableColumn fx:id="colItemTotal" text="Total" prefWidth="100" />
+                    <TableColumn fx:id="colItemAcoes" text="" prefWidth="50" />
+                </columns>
+            </TableView>
+        </VBox>
+
+        <!-- Coluna Direita: Resumo -->
+        <VBox spacing="20" prefWidth="250" style="-fx-background-color: #1e1e2e; -fx-padding: 20; -fx-background-radius: 10;">
+            <Label text="Resumo da Venda" styleClass="card-title" />
+            
+            <Region VBox.vgrow="ALWAYS" />
+            
+            <VBox spacing="5" alignment="CENTER_RIGHT">
+                <Label text="TOTAL" style="-fx-text-fill: #a6adc8; -fx-font-size: 14px;" />
+                <Label fx:id="lblTotalVenda" text="R$ 0,00" style="-fx-text-fill: #f9e2af; -fx-font-size: 32px; -fx-font-weight: bold;" />
+            </VBox>
+
+            <Button text="Finalizar Venda" onAction="#handleFinalizarVenda" maxWidth="Infinity" styleClass="button-primary" style="-fx-font-size: 16px; -fx-padding: 15;" />
+            <Button text="Cancelar" onAction="#handleCancelar" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: #f38ba8; -fx-cursor: hand;" />
+        </VBox>
+    </HBox>
+
+</VBox>

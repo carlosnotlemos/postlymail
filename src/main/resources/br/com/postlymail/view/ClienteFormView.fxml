@@ -14,7 +14,7 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <Label text="Novo Cliente" styleClass="card-title" style="-fx-font-size: 20px;" />
+    <Label fx:id="lblTitulo" text="Novo Cliente" styleClass="card-title" style="-fx-font-size: 20px;" />
 
     <VBox spacing="5">
         <Label text="Nome Completo" style="-fx-text-fill: #bac2de;" />

@@ -15,14 +15,18 @@
     </HBox>
 
     <VBox styleClass="card" VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colNome" text="Nome" prefWidth="250" />
-                <TableColumn fx:id="colEmail" text="E-mail" prefWidth="250" />
-                <TableColumn fx:id="colTelefone" text="Telefone" prefWidth="150" />
-                <TableColumn fx:id="colCadastro" text="Cadastro" prefWidth="150" />
-            </columns>
-        </TableView>
+        <StackPane VBox.vgrow="ALWAYS">
+            <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colNome" text="Nome" prefWidth="250" />
+                    <TableColumn fx:id="colEmail" text="E-mail" prefWidth="250" />
+                    <TableColumn fx:id="colTelefone" text="Telefone" prefWidth="150" />
+                    <TableColumn fx:id="colCadastro" text="Cadastro" prefWidth="150" />
+                    <TableColumn fx:id="colAcoes" text="Ações" prefWidth="150" />
+                </columns>
+            </TableView>
+            <ProgressIndicator fx:id="progressLoading" maxWidth="50" maxHeight="50" visible="false" />
+        </StackPane>
     </VBox>
 
 </VBox>

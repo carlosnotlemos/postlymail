@@ -54,12 +54,14 @@ O banco de dados será composto pelas seguintes entidades principais:
 - [x] Configuração da conexão SQLite com Hibernate.
 - [x] Refatoração para estrutura de pacotes sólida (`br.com.postlymail`).
 
-### Fase 2: Interface e CRUDs [/] 50%
+### Fase 2: Interface e CRUDs [x] 100%
 
 - [x] Layout principal com menu de navegação.
 - [x] Aplicação de design premium (CSS Customizado).
-- [ ] Telas de cadastro de Clientes e Produtos.
-- [ ] Tela de registro de novas Vendas.
+- [x] CRUD de Clientes (Listagem, Criação, Edição, Exclusão).
+- [x] CRUD de Produtos (Listagem, Criação, Edição, Exclusão).
+- [x] Tela de registro de novas Vendas (Fluxo de PDV completo).
+- [x] Otimização de performance (Async loading & Hibernate Pre-warming).
 
 ### Fase 3: Inteligência e Comunicação [ ] 0%
 

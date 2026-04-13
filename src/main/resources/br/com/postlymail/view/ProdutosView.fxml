@@ -5,23 +5,28 @@
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
+      fx:controller="br.com.postlymail.controller.ProdutosController"
       spacing="20">
 
     <HBox alignment="CENTER_LEFT">
         <Label text="Catálogo de Produtos" styleClass="view-title" />
         <Region HBox.hgrow="ALWAYS" />
-        <Button text="+ Novo Produto" styleClass="button-primary" />
+        <Button text="+ Novo Produto" styleClass="button-primary" onAction="#handleNovoProduto" />
     </HBox>
 
     <VBox styleClass="card" VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableProdutos" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn text="Nome" prefWidth="300" />
-                <TableColumn text="Categoria" prefWidth="150" />
-                <TableColumn text="Preço" prefWidth="120" />
-                <TableColumn text="Estoque" prefWidth="100" />
-            </columns>
-        </TableView>
+        <StackPane VBox.vgrow="ALWAYS">
+            <TableView fx:id="tableProdutos" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colNome" text="Nome" prefWidth="250" />
+                    <TableColumn fx:id="colCategoria" text="Categoria" prefWidth="150" />
+                    <TableColumn fx:id="colPreco" text="Preço" prefWidth="120" />
+                    <TableColumn fx:id="colEstoque" text="Estoque" prefWidth="100" />
+                    <TableColumn fx:id="colAcoes" text="Ações" prefWidth="150" />
+                </columns>
+            </TableView>
+            <ProgressIndicator fx:id="progressLoading" maxWidth="50" maxHeight="50" visible="false" />
+        </StackPane>
     </VBox>
 
 </VBox>

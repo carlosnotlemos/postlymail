@@ -13,7 +13,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.scene.layout.HBox;
+import javafx.concurrent.Task;
 import java.io.IOException;
+import java.util.List;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -24,17 +27,22 @@ public class ClientesController {
     @FXML private TableColumn<Cliente, String> colEmail;
     @FXML private TableColumn<Cliente, String> colTelefone;
     @FXML private TableColumn<Cliente, LocalDateTime> colCadastro;
+    @FXML private TableColumn<Cliente, Void> colAcoes;
+    @FXML private ProgressIndicator progressLoading;
 
+    @FXML private Label lblTitulo;
     @FXML private TextField txtNome;
     @FXML private TextField txtEmail;
     @FXML private TextField txtTelefone;
 
     private final ClienteService clienteService = new ClienteService();
     private final ObservableList<Cliente> observableClientes = FXCollections.observableArrayList();
+    private Cliente clienteEmEdicao;
 
     @FXML
     public void initialize() {
         configurarTabela();
+        configurarAcoes();
         carregarClientes();
     }
 
@@ -61,13 +69,92 @@ public class ClientesController {
         tableClientes.setItems(observableClientes);
     }
 
+    private void configurarAcoes() {
+        colAcoes.setCellFactory(column -> new TableCell<>() {
+            private final Button btnEdit = new Button("✎");
+            private final Button btnDelete = new Button("🗑");
+            private final HBox container = new HBox(10, btnEdit, btnDelete);
+
+            {
+                btnEdit.getStyleClass().add("button-action-edit");
+                btnDelete.getStyleClass().add("button-action-delete");
+                btnEdit.setTooltip(new Tooltip("Editar"));
+                btnDelete.setTooltip(new Tooltip("Excluir"));
+
+                btnEdit.setOnAction(event -> {
+                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    handleEditarCliente(cliente);
+                });
+
+                btnDelete.setOnAction(event -> {
+                    Cliente cliente = getTableView().getItems().get(getIndex());
+                    handleExcluirCliente(cliente);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(container);
+                }
+            }
+        });
+    }
+
     private void carregarClientes() {
-        observableClientes.setAll(clienteService.listarTodos());
+        Task<List<Cliente>> loadTask = new Task<>() {
+            @Override
+            protected List<Cliente> call() {
+                return clienteService.listarTodos();
+            }
+        };
+
+        loadTask.setOnRunning(e -> progressLoading.setVisible(true));
+        loadTask.setOnSucceeded(e -> {
+            observableClientes.setAll(loadTask.getValue());
+            progressLoading.setVisible(false);
+        });
+        loadTask.setOnFailed(e -> {
+            progressLoading.setVisible(false);
+            mostrarAlerta("Erro", "Falha ao carregar clientes: " + loadTask.getException().getMessage());
+        });
+
+        new Thread(loadTask).start();
     }
 
     @FXML
     private void handleNovoCliente(ActionEvent event) {
+        clienteEmEdicao = null;
         showClienteForm(null);
+    }
+
+    private void handleEditarCliente(Cliente cliente) {
+        clienteEmEdicao = cliente;
+        showClienteForm(cliente);
+    }
+
+    private void handleExcluirCliente(Cliente cliente) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar Exclusão");
+        alert.setHeaderText("Excluir Cliente");
+        alert.setContentText("Tem certeza que deseja excluir o cliente " + cliente.getNome() + "?");
+        
+        // Custom styling for dialog (basic)
+        alert.initStyle(StageStyle.UTILITY);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    clienteService.excluir(cliente.getId());
+                    carregarClientes();
+                } catch (Exception e) {
+                    mostrarAlerta("Erro", "Falha ao excluir cliente: " + e.getMessage());
+                }
+            }
+        });
     }
 
     private void showClienteForm(Cliente cliente) {
@@ -78,14 +165,19 @@ public class ClientesController {
             
             Stage dialogStage = new Stage();
             dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initStyle(StageStyle.UNDECORATED); // Modern look
+            dialogStage.initStyle(StageStyle.UNDECORATED);
             dialogStage.setScene(scene);
             
-            // Clear fields if new
-            if (cliente == null) {
-                // txtNome and others are injected because this controller is reused or can be separate.
-                // For simplicity, I'm using the same controller for the modal here, 
-                // but let's make sure IDs match or use a separate controller if needed.
+            if (cliente != null) {
+                lblTitulo.setText("Editar Cliente");
+                txtNome.setText(cliente.getNome());
+                txtEmail.setText(cliente.getEmail());
+                txtTelefone.setText(cliente.getTelefone());
+            } else {
+                lblTitulo.setText("Novo Cliente");
+                txtNome.clear();
+                txtEmail.clear();
+                txtTelefone.clear();
             }
 
             dialogStage.showAndWait();
@@ -106,9 +198,16 @@ public class ClientesController {
             return;
         }
 
-        Cliente novo = new Cliente(txtNome.getText(), txtEmail.getText(), txtTelefone.getText());
+        if (clienteEmEdicao == null) {
+            clienteEmEdicao = new Cliente();
+        }
+
+        clienteEmEdicao.setNome(txtNome.getText());
+        clienteEmEdicao.setEmail(txtEmail.getText());
+        clienteEmEdicao.setTelefone(txtTelefone.getText());
+
         try {
-            clienteService.salvar(novo);
+            clienteService.salvar(clienteEmEdicao);
             carregarClientes();
             fecharModal(event);
         } catch (Exception e) {

@@ -112,3 +112,47 @@
 .button-primary:hover {
     -fx-background-color: #b4befe;
 }
+
+.button-action-edit {
+    -fx-background-color: transparent;
+    -fx-text-fill: #a6e3a1; /* Greenish */
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.button-action-edit:hover {
+    -fx-text-fill: #94e2d5;
+}
+
+.button-action-delete {
+    -fx-background-color: transparent;
+    -fx-text-fill: #f38ba8; /* Redish */
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.button-action-delete:hover {
+    -fx-text-fill: #eba0ac;
+}
+
+/* ComboBox Premium */
+.combo-box {
+    -fx-background-color: #313244;
+    -fx-background-radius: 5;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 5;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: #cdd6f4;
+}
+
+.combo-box:hover {
+    -fx-border-color: #89b4fa;
+}
+
+.combo-box-premium {
+    -fx-pref-height: 40;
+}
