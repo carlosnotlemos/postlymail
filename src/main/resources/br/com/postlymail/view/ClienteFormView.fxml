@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="15" styleClass="card" 
+      prefWidth="400"
+      stylesheets="@../css/style.css">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Novo Cliente" styleClass="card-title" style="-fx-font-size: 20px;" />
+
+    <VBox spacing="5">
+        <Label text="Nome Completo" style="-fx-text-fill: #bac2de;" />
+        <TextField fx:id="txtNome" promptText="Ex: João Silva" styleClass="text-input" />
+    </VBox>
+
+    <VBox spacing="5">
+        <Label text="E-mail" style="-fx-text-fill: #bac2de;" />
+        <TextField fx:id="txtEmail" promptText="exemplo@email.com" />
+    </VBox>
+
+    <VBox spacing="5">
+        <Label text="Telefone" style="-fx-text-fill: #bac2de;" />
+        <TextField fx:id="txtTelefone" promptText="(11) 99999-9999" />
+    </VBox>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#handleCancelar" style="-fx-background-color: transparent; -fx-text-fill: #f38ba8; -fx-cursor: hand;" />
+        <Button text="Salvar Cliente" onAction="#handleSalvar" styleClass="button-primary" />
+    </HBox>
+
+</VBox>

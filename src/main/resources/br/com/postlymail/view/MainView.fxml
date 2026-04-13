@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="br.com.postlymail.controller.MainController"
+            prefHeight="720.0" prefWidth="1080.0">
+
+    <left>
+        <VBox styleClass="sidebar">
+            <Label text="PostlyMail" styleClass="sidebar-title" />
+            
+            <Button fx:id="btnDashboard" text="📊 Dashboard" styleClass="nav-button, nav-button-active" onAction="#handleNavigation" />
+            <Button fx:id="btnClientes" text="👤 Clientes" styleClass="nav-button" onAction="#handleNavigation" />
+            <Button fx:id="btnProdutos" text="📦 Produtos" styleClass="nav-button" onAction="#handleNavigation" />
+            <Button fx:id="btnVendas" text="💰 Vendas" styleClass="nav-button" onAction="#handleNavigation" />
+            
+            <Region VBox.vgrow="ALWAYS" />
+            
+            <Button text="⚙️ Ajustes" styleClass="nav-button" />
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area">
+            <!-- Content will be injected here -->
+        </StackPane>
+    </center>
+
+</BorderPane>

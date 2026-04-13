@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="br.com.postlymail.controller.ClientesController"
+      spacing="20">
+
+    <HBox alignment="CENTER_LEFT">
+        <Label text="Gestão de Clientes" styleClass="view-title" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="+ Novo Cliente" styleClass="button-primary" onAction="#handleNovoCliente" />
+    </HBox>
+
+    <VBox styleClass="card" VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colNome" text="Nome" prefWidth="250" />
+                <TableColumn fx:id="colEmail" text="E-mail" prefWidth="250" />
+                <TableColumn fx:id="colTelefone" text="Telefone" prefWidth="150" />
+                <TableColumn fx:id="colCadastro" text="Cadastro" prefWidth="150" />
+            </columns>
+        </TableView>
+    </VBox>
+
+</VBox>

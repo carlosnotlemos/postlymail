@@ -1,0 +1,114 @@
+/* PostlyMail CRM - Premium Style */
+
+.root {
+    -fx-base: #1e1e2e;
+    -fx-accent: #89b4fa;
+    -fx-default-button: #89b4fa;
+    -fx-background-color: #1e1e2e;
+    -fx-font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    -fx-background-color: #181825;
+    -fx-padding: 20 0 20 0;
+    -fx-pref-width: 240;
+}
+
+.sidebar-title {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 30 20;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #a6adc8;
+    -fx-font-size: 15px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 0 12 25;
+    -fx-background-radius: 0;
+    -fx-cursor: hand;
+    -fx-pref-width: 240;
+}
+
+.nav-button:hover {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+}
+
+.nav-button-active {
+    -fx-background-color: #313244;
+    -fx-text-fill: #89b4fa;
+    -fx-border-color: transparent transparent transparent #89b4fa;
+    -fx-border-width: 0 0 0 4;
+}
+
+/* Content Area */
+.content-area {
+    -fx-background-color: #1e1e2e;
+    -fx-padding: 30;
+}
+
+.view-title {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 20 0;
+}
+
+/* Card Styling */
+.card {
+    -fx-background-color: #313244;
+    -fx-background-radius: 10;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);
+}
+
+.card-title {
+    -fx-text-fill: #bac2de;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* Table Styling */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #181825;
+    -fx-background-radius: 5 5 0 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-text-fill: #89b4fa;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-border-color: #1e1e2e transparent transparent transparent;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #45475a;
+}
+
+/* Button Styling */
+.button-primary {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+    -fx-padding: 10 20;
+    -fx-cursor: hand;
+}
+
+.button-primary:hover {
+    -fx-background-color: #b4befe;
+}

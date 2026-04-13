@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="20">
+
+    <Label text="Dashboard" styleClass="view-title" />
+
+    <HBox spacing="20">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+            <Label text="Total Clientes" styleClass="card-title" />
+            <Label text="1,248" style="-fx-text-fill: white; -fx-font-size: 32px; -fx-font-weight: bold;" />
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+            <Label text="Vendas (Mês)" styleClass="card-title" />
+            <Label text="R$ 15.420,00" style="-fx-text-fill: #89b4fa; -fx-font-size: 32px; -fx-font-weight: bold;" />
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+            <Label text="E-mails Enviados" styleClass="card-title" />
+            <Label text="450" style="-fx-text-fill: #a6e3a1; -fx-font-size: 32px; -fx-font-weight: bold;" />
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="card" VBox.vgrow="ALWAYS">
+        <Label text="Atividade Recente" styleClass="card-title" />
+        <ListView fx:id="recentActivityList" style="-fx-background-color: transparent;" />
+    </VBox>
+
+</VBox>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="20">
+
+    <HBox alignment="CENTER_LEFT">
+        <Label text="Catálogo de Produtos" styleClass="view-title" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="+ Novo Produto" styleClass="button-primary" />
+    </HBox>
+
+    <VBox styleClass="card" VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableProdutos" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="Nome" prefWidth="300" />
+                <TableColumn text="Categoria" prefWidth="150" />
+                <TableColumn text="Preço" prefWidth="120" />
+                <TableColumn text="Estoque" prefWidth="100" />
+            </columns>
+        </TableView>
+    </VBox>
+
+</VBox>
