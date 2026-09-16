@@ -10,7 +10,20 @@
 #   inflect.uncountable %w( fish sheep )
 # end
 
-# These inflection rules are supported but not enabled by default:
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.irregular "cupom", "cupons"
+  inflect.irregular "devolucao", "devolucoes"
+  inflect.irregular "devolucao_item", "devolucao_itens"
+  inflect.irregular "variacao_produto", "variacoes_produtos"
+  inflect.irregular "estoque_movimentacao", "estoque_movimentacoes"
+  inflect.irregular "produto_categoria", "produto_categorias"
+  inflect.irregular "produto_insumo", "produto_insumos"
+  inflect.irregular "venda_item", "venda_itens"
+  inflect.irregular "venda_pagamento", "venda_pagamentos"
+  inflect.irregular "assinatura_fatura", "assinatura_faturas"
+  inflect.irregular "webhook_log", "webhook_logs"
+end

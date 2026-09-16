@@ -72,3 +72,5 @@ group :development, :test do
   gem "factory_bot_rails", "~> 6.4.4"
   gem "faker", "~> 3.8"
 end
+
+gem "json", "< 3.0"
