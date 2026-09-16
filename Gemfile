@@ -66,3 +66,7 @@ group :test do
 end
 
 gem "dotenv-rails", "~> 3.2"
+
+group :development, :test do
+  gem "rspec-rails", "~> 8.0"
+end
