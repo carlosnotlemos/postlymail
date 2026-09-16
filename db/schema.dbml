@@ -1,0 +1,471 @@
+Table Vendas [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	cliente_id bigint [ not null ]
+	usuario_id bigint [ note: 'FK para Usuarios.id (vendedor/atendente responsável)' ]
+	cupom_id bigint [ note: 'FK para Cupons.id (opcional, null se foi desconto manual)' ]
+	codigo_cupom varchar(255) [ note: 'Snapshot do código do cupom usado (caso o cupom seja deletado depois)' ]
+	codigo_pedido varchar(255) [ not null, note: 'Token amigável para rastreio público (ex: FT-8K2M9P)' ]
+	subtotal_produtos decimal(10,2) [ not null, default: 0, note: 'Soma dos itens de venda' ]
+	valor_frete decimal(10,2) [ not null, default: 0, note: 'Frete cobrado do cliente' ]
+	desconto_cupom decimal(10,2) [ not null, default: 0, note: 'Valor abatido exclusivamente pela regra do cupom' ]
+	desconto_manual decimal(10,2) [ not null, default: 0, note: 'Valor abatido manualmente pelo operador de caixa' ]
+	valor_desconto decimal(10,2) [ not null, default: 0, note: 'Descontos aplicados' ]
+	valor_total decimal(10,2) [ not null, default: 0, note: 'subtotal_produtos + valor_frete - valor_desconto' ]
+	tipo_entrega integer [ not null, default: 0, note: '0: retirada, 1: motoboy_uber, 2: correios_pac, 3: correios_sedex' ]
+	endereco_entrega jsonb [ not null, default: '{}', note: 'Snapshot congelado: {cep, logradouro, numero, complemento, bairro, cidade, estado, ponto_referencia}' ]
+	codigo_rastreio varchar(255)
+	status integer [ not null, default: 0, note: '0: pendente, 1: paga, 2: enviada, 3: concluida, 4: cancelada' ]
+	data_venda timestamp [ not null ]
+	observacoes text
+	cancelado_por_id bigint [ note: 'FK para Usuarios.id (quem realizou o cancelamento)' ]
+	cancelado_em timestamp [ note: 'Data e hora em que a venda foi cancelada' ]
+	motivo_cancelamento text [ note: 'Justificativa obrigatória do cancelamento para auditoria antifraude' ]
+
+	indexes {
+		(empresa_id, codigo_pedido) [ unique ]
+	}
+}
+
+Table Venda_itens [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	venda_id bigint [ not null ]
+	variacao_produto_id bigint [ not null ]
+	detalhes_produto jsonb [ not null, default: '{}', note: 'Snapshot: {nome, cor, tamanho, sku, categoria}' ]
+	valor_unitario decimal(10,2) [ not null, default: 0, note: 'Preço cobrado na hora' ]
+	preco_custo_unitario decimal(10,2) [ not null, default: 0, note: 'Custo de produção na hora' ]
+	quantidade integer [ not null, default: 1 ]
+	subtotal decimal(10,2) [ not null, default: 0 ]
+	observacoes text [ note: 'Personalização do item (ex: frase, estampa frente/costas)' ]
+}
+
+Table Clientes [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	nome varchar(255) [ not null ]
+	documento varchar(255) [ note: 'CPF ou CNPJ' ]
+	email varchar(255)
+	telefone varchar(255)
+	ativo boolean [ not null, default: true, note: 'Soft delete / controle de cadastro geral' ]
+	aceita_marketing boolean [ not null, default: true, note: 'Consentimento de marketing (descadastro / bounce)' ]
+	data_cadastro timestamp [ not null ]
+}
+
+Table Estoques [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	variacao_produto_id bigint [ not null, unique ]
+	quantidade integer [ not null, default: 0 ]
+	quantidade_minima integer [ not null, default: 5 ]
+}
+
+Table Variacoes_produtos [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	produto_id bigint [ not null ]
+	sku varchar(255) [ note: 'Código de referência legível (ex: OVR-PRT-M)' ]
+	codigo_barras varchar(255) [ note: 'EAN-13 ou código para leitor óptico (opcional)' ]
+	tamanho varchar(255) [ note: 'Ex: P, M, G, 42, 44, Único, 18mm, 100ml (null se não aplicável)' ]
+	cor varchar(255) [ note: 'Ex: Preta, Branca, Off-White, Vinho, Rosa Bebê' ]
+	preco_base decimal(10,2) [ not null, default: 0, note: 'Preço de venda praticado' ]
+	preco_custo decimal(10,2) [ not null, default: 0, note: 'Custo de confecção/compra' ]
+	ativo boolean [ not null, default: true ]
+}
+
+Table Produtos [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	produto_categoria_id bigint [ note: 'FK para Produto_categorias (opcional)' ]
+	nome varchar(255) [ not null ]
+	descricao text
+	ativo boolean [ not null, default: true ]
+}
+
+Table Custos [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	venda_id bigint [ note: 'Opcional (null se for custo fixo/geral)' ]
+	categoria integer [ not null, default: 0, note: '0: insumos_producao, 1: frete_entrega, 2: trafego_pago, 3: operacional_geral, 4: embalagem' ]
+	valor decimal(10,2) [ not null, default: 0 ]
+	data_custo date [ not null ]
+	descricao varchar(255) [ note: 'Ex: UBER CST, DTF CST, Anúncio Namorados' ]
+}
+
+Table Produto_insumos [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	variacao_produto_id bigint [ not null ]
+	nome varchar(255) [ not null, note: 'Ex: Malha 100% Algodão, Estampa DTF, Costura, Tag/Embalagem' ]
+	valor decimal(10,2) [ not null, default: 0, note: 'Valor unitário em R$ direto' ]
+}
+
+Table Disparos [headercolor: #8338ec] {
+	id bigint [ pk, increment, not null ]
+	cliente_id bigint [ not null ]
+	campanha_id bigint [ not null ]
+	identificador_externo varchar(255) [ note: 'ID retornado pelo provedor (Resend, SendGrid, Twilio) para rastreio' ]
+	destinatario varchar(255) [ not null, note: 'Guarda o e-mail ou o número com DDD (ex: 85999999999)' ]
+	status integer [ not null, default: 0, note: '0: na_fila, 1: enviado, 2: entregue, 3: falhou, 4: rejeitado' ]
+	enviado_em timestamp
+	mensagem_erro text [ note: 'Erro retornado pelo SMTP ou API WhatsApp' ]
+}
+
+Table Campanhas [headercolor: #8338ec] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	nome varchar(255) [ not null, note: 'Ex: Drop Inverno 2026, Lembrete de Carrinho' ]
+	canal integer [ not null, default: 0, note: '0: email, 1: whatsapp' ]
+	assunto varchar(255) [ note: 'Obrigatório para E-mail, nulo para WhatsApp' ]
+	conteudo text [ not null, note: 'HTML completo se for E-mail; Texto com formatação (*negrito*, {{nome}}) se for WhatsApp' ]
+	url_midia varchar(255) [ note: 'Opcional: URL da foto/vídeo do drop para anexar no WhatsApp' ]
+	segmento integer [ not null, default: 0, note: '0: todos, 1: com_compras, 2: sem_compras' ]
+	status integer [ not null, default: 0, note: '0: rascunho, 1: agendada, 2: enviando, 3: concluida, 4: cancelada' ]
+	data_envio timestamp
+}
+
+Table Venda_pagamentos [headercolor: #2b9348] {
+	id bigint [ pk, increment, not null ]
+	venda_id bigint [ not null ]
+	gateway integer [ not null, default: 0, note: '0: manual, 1: asaas, 2: stripe, 3: mercadopago' ]
+	gateway_id varchar(255) [ note: 'ID retornado pelo gateway (ex: pay_123)' ]
+	valor decimal(10,2) [ not null, default: 0, note: 'Valor cobrado' ]
+	taxa_operadora decimal(10,2) [ not null, default: 0, note: 'Taxa retida pela maquininha/gateway' ]
+	valor_liquido decimal(10,2) [ not null, default: 0, note: 'valor - taxa_operadora' ]
+	forma_pagamento integer [ not null, default: 0, note: '0: pix, 1: cartao_credito, 2: cartao_debito, 3: dinheiro, 4: boleto' ]
+	status integer [ not null, default: 0, note: '0: pendente, 1: aprovado, 2: recusado, 3: estornado' ]
+	parcelas integer [ not null, default: 1 ]
+	data_liquidacao timestamp [ note: 'Data efetiva em que o pagamento compensou' ]
+	metadados jsonb [ not null, default: '{}', note: 'Payload do gateway, copia-e-cola Pix, URLs e tokens' ]
+}
+
+Table Produto_categorias [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	nome varchar(255) [ not null, note: 'Nome digitado pelo lojista (ex: Camisetas Oversized)' ]
+	slug varchar(255) [ not null, note: 'Identificador amigável de URL (ex: camisetas-oversized)' ]
+	ativo boolean [ not null, default: true, note: 'Controle de visibilidade na vitrine e filtros' ]
+
+	indexes {
+		(empresa_id, slug) [ unique ]
+	}
+}
+
+Table Empresas [headercolor: #0d3b66] {
+	id bigint [ pk, increment, not null ]
+	nome varchar(255) [ not null, note: 'Razão social ou nome fantasia da marca' ]
+	slug varchar(255) [ not null, unique, note: 'Identificador único / subdomínio (ex: dropwear)' ]
+	documento varchar(255) [ note: 'CNPJ ou CPF do titular da conta' ]
+	email varchar(255) [ not null, note: 'E-mail do administrador da loja' ]
+	ativo boolean [ not null, default: true, note: 'Bloqueio de inadimplência ou cancelamento' ]
+	data_cadastro timestamp [ not null ]
+}
+
+Table Assinaturas [headercolor: #0d3b66] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	plano_id bigint [ not null ]
+	status integer [ not null, default: 0, note: '0: pendente, 1: ativa, 2: atrasada, 3: suspensa, 4: cancelada' ]
+	ciclo integer [ not null, default: 0, note: '0: mensal, 1: trimestral, 2: anual' ]
+	valor decimal(10,2) [ not null, default: 0 ]
+	data_inicio date [ note: 'Preenchido na confirmação do 1º pagamento' ]
+	data_fim date [ note: 'Vigência do ciclo atual / expiração' ]
+	data_cancelamento timestamp
+
+	indexes {
+		(empresa_id) [ unique, note: 'WHERE status = 1' ]
+	}
+}
+
+Table Planos [headercolor: #0d3b66] {
+	id bigint [ pk, increment, not null ]
+	identificador integer [ not null, unique, note: 'Enum Rails: 0: start, 1: pro, 2: enterprise' ]
+	nome varchar(255) [ not null, note: 'Nome comercial exibido na tela (ex: Start, Pro)' ]
+	valor_mensal decimal(10,2) [ not null, default: 0 ]
+	limite_produtos integer [ default: 15, note: 'Cota máxima de produtos (null = ilimitado)' ]
+	limite_disparos integer [ not null, default: 0, note: 'Cota mensal de disparos' ]
+	limite_usuarios integer [ not null, default: 2, note: 'Quantidade máxima de membros permitidos na equipe (null = ilimitado)' ]
+	ativo boolean [ not null, default: true, note: 'Disponível para novas contratações' ]
+}
+
+Table Assinatura_faturas [headercolor: #0d3b66] {
+	id bigint [ pk, increment, not null ]
+	assinatura_id bigint [ not null ]
+	valor decimal(10,2) [ not null, default: 0 ]
+	data_vencimento date [ not null ]
+	data_pagamento timestamp [ note: 'Preenchido no momento da liquidação' ]
+	status integer [ not null, default: 0, note: '0: pendente, 1: paga, 2: cancelada' ]
+	gateway_id varchar(255) [ note: 'ID da fatura/cobrança gerada no gateway' ]
+	metadados jsonb [ not null, default: '{}', note: 'Linha digitável, QR Code Pix, PDF do boleto e payloads' ]
+
+	indexes {
+		(gateway_id) [ unique ]
+	}
+}
+
+Table Membros [headercolor: #3a0ca3] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	usuario_id bigint [ not null ]
+	papel integer [ not null, default: 0, note: '0: atendente, 1: estoquista, 2: gerente, 3: proprietario' ]
+	ativo boolean [ not null, default: true, note: 'Permite desativar o acesso deste usuário nesta loja' ]
+	convidado_por_id bigint [ note: 'Qual usuário enviou o convite original' ]
+	data_entrada timestamp [ not null ]
+
+	indexes {
+		(empresa_id, usuario_id) [ unique ]
+	}
+}
+
+Table Usuarios [headercolor: #3a0ca3] {
+	id bigint [ pk, increment, not null ]
+	nome varchar(255) [ not null ]
+	email varchar(255) [ not null, unique, note: 'E-mail principal do usuário' ]
+	telefone varchar(255) [ note: 'Celular / WhatsApp pessoal' ]
+	ativo boolean [ not null, default: true, note: 'Bloqueio geral da conta na plataforma' ]
+	data_cadastro timestamp [ not null ]
+}
+
+Table Convites [headercolor: #3a0ca3] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	convidado_por_id bigint [ not null, note: 'Usuário que disparou o convite' ]
+	email varchar(255) [ not null, note: 'E-mail para onde o convite foi enviado' ]
+	papel integer [ not null, default: 0, note: '0: atendente, 1: estoquista, 2: gerente, 3: proprietario' ]
+	token varchar(255) [ not null, unique, note: 'Token criptográfico seguro enviado na URL por e-mail' ]
+	expira_em timestamp [ not null, note: 'Prazo limite para o aceite do convite (ex: 7 dias)' ]
+	aceito_em timestamp [ note: 'Data e hora em que o convite foi aceito' ]
+
+	indexes {
+		(token) [ unique ]
+		(empresa_id, email) [ unique, note: 'WHERE aceito_em IS NULL' ]
+	}
+}
+
+Table Devolucao_itens [headercolor: #e63946] {
+	id bigint [ pk, increment, not null ]
+	venda_item_id bigint [ not null ]
+	devolucao_id bigint [ not null ]
+	quantidade integer [ not null, default: 1 ]
+	retornou_ao_estoque boolean [ not null, default: true, note: 'Se false, peça com avaria descartada' ]
+}
+
+Table Devolucoes [headercolor: #e63946] {
+	id bigint [ pk, increment, not null ]
+	venda_id bigint [ not null ]
+	empresa_id bigint [ not null ]
+	tipo integer [ not null, default: 0, note: '0: estorno_dinheiro, 1: credito_troca, 2: defeito_avaria' ]
+	valor_estornado decimal(10,2) [ not null, default: 0, note: 'Valor devolvido ou gerado em crédito' ]
+	motivo text [ note: 'Motivo da devolução ou defeito apresentado' ]
+	data_devolucao timestamp [ not null ]
+}
+
+Table Estoque_movimentacoes [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	usuario_id bigint [ note: 'Quem fez a movimentação (null se foi automático pelo sistema)' ]
+	variacao_produto_id bigint [ not null ]
+	empresa_id bigint [ not null ]
+	tipo integer [ not null, note: '0: entrada_producao, 1: saida_venda, 2: estorno_devolucao, 3: ajuste_manual, 4: perda_avaria, 5: brinde_marketing' ]
+	quantidade integer [ not null, note: 'Quantidade movimentada (sempre positivo)' ]
+	saldo_anterior integer [ not null, note: 'Saldo que estava no momento do lançamento' ]
+	saldo_posterior integer [ not null, note: 'Saldo após a movimentação' ]
+	origem_tipo varchar(255) [ note: 'Polimórfico opcional: "Venda", "Devolucao", "AjusteManual"' ]
+	origem_id bigint [ note: 'ID do registro que disparou a alteração' ]
+	motivo varchar(255) [ note: 'Ex: Contagem física, Costura rasgada, Presente influencer' ]
+}
+
+Table Webhook_logs [headercolor: #2b9348] {
+	id bigint [ pk, increment, not null ]
+	provedor integer [ not null, default: 0, note: '0: asaas, 1: stripe, 2: mercadopago, 3: resend, 4: twilio, 5: zapi' ]
+	evento varchar(255) [ note: 'Ex: PAYMENT_RECEIVED, payment_intent.succeeded' ]
+	identificador_externo varchar(255) [ note: 'ID do objeto no provedor (pay_123, re_abc456, wamid_xyz)' ]
+	payload jsonb [ not null, default: '{}', note: 'Corpo bruto da requisição HTTP recebida' ]
+	status integer [ not null, default: 0, note: '0: pendente, 1: processado, 2: falhou, 3: duplicado_ignorado' ]
+	mensagem_erro text [ note: 'Mensagem de erro ou stack trace caso o job falhe' ]
+	processado_em timestamp [ note: 'Data e hora da finalização do processamento' ]
+	
+	indexes {
+        (provedor, identificador_externo) [ unique, note: 'WHERE identificador_externo IS NOT NULL' ]
+    }
+}
+
+Table Enderecos [headercolor: #175e7a] {
+	id bigint [ pk, increment, not null ]
+	cliente_id bigint [ not null ]
+	titulo varchar(255) [ default: 'Principal', note: 'Ex: Casa, Trabalho, Galpão' ]
+	cep varchar(10) [ not null, note: 'Apenas números (ex: 60000000)' ]
+	logradouro varchar(255) [ not null ]
+	numero varchar(50) [ not null ]
+	complemento varchar(255)
+	bairro varchar(255) [ not null ]
+	cidade varchar(255) [ not null ]
+	estado varchar(2) [ not null, note: 'UF (ex: CE, SP)' ]
+	ponto_referencia text
+	padrao boolean [ not null, default: false, note: 'Indica se é o endereço principal de entrega' ]
+
+	indexes {
+        (cliente_id) [ unique, note: 'WHERE padrao = true' ]
+    }	
+}
+
+Table Cupons [headercolor: #8338ec] {
+	id bigint [ pk, increment, not null ]
+	empresa_id bigint [ not null ]
+	codigo varchar(255) [ not null, note: 'Código digitado pelo cliente/balcão (ex: BEMVINDO10, STREET15)' ]
+	tipo integer [ not null, default: 0, note: '0: porcentagem, 1: valor_fixo' ]
+	valor decimal(10,2) [ not null, default: 0, note: 'Ex: 10.00 (para 10%) ou 20.00 (para R$ 20 de desconto)' ]
+	valor_minimo_pedido decimal(10,2) [ default: 0, note: 'Pedido mínimo para o cupom ser válido (opcional)' ]
+	limite_usos integer [ note: 'Quantidade máxima de vezes que pode ser usado no total (null = ilimitado)' ]
+	usos_contagem integer [ not null, default: 0, note: 'Contador incremental de utilizações' ]
+	valido_de timestamp [ note: 'Início da vigência da promoção' ]
+	valido_ate timestamp [ note: 'Fim da vigência da promoção' ]
+	ativo boolean [ not null, default: true ]
+
+	indexes {
+		(empresa_id, codigo) [ unique ]
+	}
+}
+
+Ref fk_Vendas_cliente_id {
+	Vendas.cliente_id > Clientes.id [ delete: restrict, update: cascade ]
+}
+
+Ref fk_Venda_itens_venda_id {
+	Venda_itens.venda_id > Vendas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Variacoes_produtos_produto_id {
+	Variacoes_produtos.produto_id > Produtos.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Estoques_variacao_produto_id {
+	Estoques.variacao_produto_id - Variacoes_produtos.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Venda_itens_variacao_produto_id {
+	Venda_itens.variacao_produto_id > Variacoes_produtos.id [ delete: restrict, update: cascade ]
+}
+
+Ref fk_Custos_venda_id {
+	Custos.venda_id > Vendas.id [ delete: set null, update: cascade ]
+}
+
+Ref fk_Produto_insumos_variacao_produto_id {
+	Produto_insumos.variacao_produto_id > Variacoes_produtos.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Venda_pagamentos_venda_id {
+	Venda_pagamentos.venda_id > Vendas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Disparos_campanha_id {
+	Disparos.campanha_id > Campanhas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Disparos_cliente_id {
+	Disparos.cliente_id > Clientes.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Produtos_produto_categoria_id {
+	Produtos.produto_categoria_id > Produto_categorias.id [ delete: set null, update: cascade ]
+}
+
+Ref fk_Clientes_empresa_id {
+	Clientes.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Produto_categorias_empresa_id {
+	Produto_categorias.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Produtos_empresa_id {
+	Produtos.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Vendas_empresa_id {
+	Vendas.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Custos_empresa_id {
+	Custos.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Campanhas_empresa_id {
+	Campanhas.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Assinaturas_empresa_id {
+	Assinaturas.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Assinaturas_plano_id {
+	Assinaturas.plano_id > Planos.id [ delete: restrict, update: cascade ]
+}
+
+Ref fk_Assinatura_faturas_assinatura_id {
+	Assinatura_faturas.assinatura_id > Assinaturas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Membros_empresa_id {
+	Membros.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Membros_usuario_id {
+	Membros.usuario_id > Usuarios.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Membros_convidado_por_id {
+	Membros.convidado_por_id > Usuarios.id [ delete: set null, update: cascade ]
+}
+
+Ref fk_Convites_empresa_id {
+	Convites.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Convites_convidado_por_id {
+	Convites.convidado_por_id > Usuarios.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Devolucoes_empresa_id {
+	Devolucoes.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Devolucoes_venda_id {
+	Devolucoes.venda_id > Vendas.id [ delete: restrict, update: cascade ]
+}
+
+Ref fk_Devolucao_itens_devolucao_id {
+	Devolucao_itens.devolucao_id > Devolucoes.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Devolucao_itens_venda_item_id {
+	Devolucao_itens.venda_item_id > Venda_itens.id [ delete: restrict, update: cascade ]
+}
+
+Ref fk_Estoque_movimentacoes_empresa_id {
+	Estoque_movimentacoes.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Estoque_movimentacoes_variacao_produto_id {
+	Estoque_movimentacoes.variacao_produto_id > Variacoes_produtos.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Estoque_movimentacoes_usuario_id {
+	Estoque_movimentacoes.usuario_id > Usuarios.id [ delete: set null, update: cascade ]
+}
+
+Ref fk_Vendas_cancelado_por_id {
+	Vendas.cancelado_por_id > Usuarios.id [ delete: set null, update: cascade ]
+}
+
+Ref fk_Enderecos_cliente_id {
+	Enderecos.cliente_id > Clientes.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Cupons_empresa_id {
+	Cupons.empresa_id > Empresas.id [ delete: cascade, update: cascade ]
+}
+
+Ref fk_Vendas_cupom_id {
+	Vendas.cupom_id > Cupons.id [ delete: set null, update: cascade ]
+}
+
+Ref fk_Vendas_usuario_id {
+	Vendas.usuario_id > Usuarios.id [ delete: set null, update: cascade ]
+}
