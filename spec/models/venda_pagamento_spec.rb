@@ -24,5 +24,23 @@ RSpec.describe VendaPagamento, type: :model do
       subject.parcelas = 0
       expect(subject).not_to be_valid
     end
+
+    it 'validates presence of status' do
+      subject.status = nil
+      expect(subject).not_to be_valid
+      expect(subject.errors[:status]).to be_present
+    end
+
+    it 'validates presence of forma_pagamento' do
+      subject.forma_pagamento = nil
+      expect(subject).not_to be_valid
+      expect(subject.errors[:forma_pagamento]).to be_present
+    end
+
+    it 'validates presence of gateway' do
+      subject.gateway = nil
+      expect(subject).not_to be_valid
+      expect(subject.errors[:gateway]).to be_present
+    end
   end
 end

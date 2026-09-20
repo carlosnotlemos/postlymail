@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_183017) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_20_150003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,7 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_183017) do
     t.string "nome", null: false
     t.string "telefone"
     t.datetime "updated_at", null: false
-    t.index ["empresa_id", "documento"], name: "index_clientes_on_empresa_id_and_documento"
+    t.index ["empresa_id", "documento"], name: "index_clientes_on_empresa_id_and_documento", unique: true, where: "((documento IS NOT NULL) AND ((documento)::text <> ''::text))"
     t.index ["empresa_id", "email"], name: "index_clientes_on_empresa_id_and_email"
     t.index ["empresa_id"], name: "index_clientes_on_empresa_id"
   end
@@ -220,6 +220,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_183017) do
     t.datetime "updated_at", null: false
     t.bigint "variacao_produto_id", null: false
     t.index ["variacao_produto_id"], name: "index_estoques_on_variacao_produto_id", unique: true
+    t.check_constraint "quantidade >= 0", name: "check_estoques_quantidade_non_negative"
   end
 
   create_table "membros", force: :cascade do |t|
@@ -297,15 +298,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_183017) do
     t.string "codigo_barras"
     t.string "cor"
     t.datetime "created_at", null: false
+    t.bigint "empresa_id", null: false
     t.decimal "preco_base", precision: 10, scale: 2, default: "0.0", null: false
     t.decimal "preco_custo", precision: 10, scale: 2, default: "0.0", null: false
     t.bigint "produto_id", null: false
-    t.string "sku"
+    t.string "sku", null: false
     t.string "tamanho"
     t.datetime "updated_at", null: false
     t.index ["codigo_barras"], name: "index_variacoes_produtos_on_codigo_barras"
+    t.index ["empresa_id", "sku"], name: "index_variacoes_produtos_on_empresa_id_and_sku", unique: true
+    t.index ["empresa_id"], name: "index_variacoes_produtos_on_empresa_id"
     t.index ["produto_id"], name: "index_variacoes_produtos_on_produto_id"
-    t.index ["sku"], name: "index_variacoes_produtos_on_sku"
   end
 
   create_table "venda_itens", force: :cascade do |t|
@@ -415,6 +418,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_183017) do
   add_foreign_key "produto_insumos", "variacoes_produtos", on_update: :cascade, on_delete: :cascade
   add_foreign_key "produtos", "empresas", on_update: :cascade, on_delete: :cascade
   add_foreign_key "produtos", "produto_categorias", on_update: :cascade, on_delete: :nullify
+  add_foreign_key "variacoes_produtos", "empresas", on_update: :cascade, on_delete: :cascade
   add_foreign_key "variacoes_produtos", "produtos", on_update: :cascade, on_delete: :cascade
   add_foreign_key "venda_itens", "variacoes_produtos", on_update: :cascade, on_delete: :restrict
   add_foreign_key "venda_itens", "vendas", on_update: :cascade, on_delete: :cascade

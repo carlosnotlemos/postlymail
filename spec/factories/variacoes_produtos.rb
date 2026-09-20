@@ -1,6 +1,7 @@
 FactoryBot.define do
   factory :variacao_produto do
     produto
+    empresa { produto.empresa }
     sequence(:sku) { |n| "OVR-PRT-#{n}" }
     sequence(:codigo_barras) { |n| "789123456789#{n % 10}" }
     tamanho { "M" }

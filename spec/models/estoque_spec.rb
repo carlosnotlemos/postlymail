@@ -15,9 +15,16 @@ RSpec.describe Estoque, type: :model do
       expect(subject).to be_valid
     end
 
-    it 'validates numericality of quantidade' do
+    it 'validates numericality of quantidade only integer and >= 0' do
       subject.quantidade = 1.5
       expect(subject).not_to be_valid
+
+      subject.quantidade = -1
+      expect(subject).not_to be_valid
+      expect(subject.errors[:quantidade]).to be_present
+
+      subject.quantidade = 0
+      expect(subject).to be_valid
     end
 
     it 'validates numericality of quantidade_minima >= 0' do

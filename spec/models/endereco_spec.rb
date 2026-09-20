@@ -7,6 +7,17 @@ RSpec.describe Endereco, type: :model do
     end
   end
 
+  describe 'callbacks' do
+    let(:cliente) { create(:cliente) }
+
+    it 'sanitizes cep by stripping non-digit characters' do
+      endereco = build(:endereco, cliente: cliente, cep: '60.000-000')
+      endereco.valid?
+      expect(endereco.cep).to eq('60000000')
+      expect(endereco).to be_valid
+    end
+  end
+
   describe 'validations' do
     let(:cliente) { create(:cliente) }
     subject { build(:endereco, cliente: cliente) }
@@ -20,8 +31,8 @@ RSpec.describe Endereco, type: :model do
       expect(subject).not_to be_valid
     end
 
-    it 'validates format of cep (8 digits)' do
-      subject.cep = '6000-000'
+    it 'validates format of cep (must have 8 digits)' do
+      subject.cep = '1234'
       expect(subject).not_to be_valid
 
       subject.cep = '60000000'

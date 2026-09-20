@@ -7,6 +7,16 @@ RSpec.describe Cupom, type: :model do
     end
   end
 
+  describe 'callbacks' do
+    let(:empresa) { create(:empresa) }
+
+    it 'normalizes codigo to stripped uppercase' do
+      cupom = build(:cupom, empresa: empresa, codigo: '  desc20off  ')
+      cupom.valid?
+      expect(cupom.codigo).to eq('DESC20OFF')
+    end
+  end
+
   describe 'validations' do
     let(:empresa) { create(:empresa) }
     subject { build(:cupom, empresa: empresa) }
@@ -25,10 +35,27 @@ RSpec.describe Cupom, type: :model do
       expect(subject).not_to be_valid
     end
 
-    it 'validates uniqueness of codigo scoped to empresa' do
+    it 'validates valor <= 100 when tipo is porcentagem' do
+      subject.tipo = :porcentagem
+      subject.valor = 101
+      expect(subject).not_to be_valid
+      expect(subject.errors[:valor]).to be_present
+
+      subject.valor = 100
+      expect(subject).to be_valid
+    end
+
+    it 'allows valor > 100 when tipo is valor_fixo' do
+      subject.tipo = :valor_fixo
+      subject.valor = 250
+      expect(subject).to be_valid
+    end
+
+    it 'validates uniqueness of codigo scoped to empresa case-insensitively' do
       create(:cupom, empresa: empresa, codigo: 'DESC10')
-      duplicate = build(:cupom, empresa: empresa, codigo: 'DESC10')
+      duplicate = build(:cupom, empresa: empresa, codigo: 'desc10')
       expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:codigo]).to be_present
     end
 
     it 'allows same codigo in different empresas' do

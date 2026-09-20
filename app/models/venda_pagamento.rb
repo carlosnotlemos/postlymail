@@ -11,6 +11,7 @@ class VendaPagamento < ApplicationRecord
   validates :taxa_operadora, numericality: { greater_than_or_equal_to: 0 }
   validates :valor_liquido, numericality: true
   validates :parcelas, numericality: { only_integer: true, greater_than_or_equal_to: 1 }
+  validates :status, :forma_pagamento, :gateway, presence: true
 
   private
 

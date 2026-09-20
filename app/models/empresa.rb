@@ -11,6 +11,7 @@ class Empresa < ApplicationRecord
   has_many :custos, dependent: :destroy
   has_many :estoque_movimentacoes, dependent: :destroy
   has_many :devolucoes, dependent: :destroy
+  has_many :variacoes_produtos, class_name: "VariacaoProduto", dependent: :destroy
 
   before_validation :set_data_cadastro, on: :create
 

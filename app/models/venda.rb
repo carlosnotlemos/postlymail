@@ -12,6 +12,7 @@ class Venda < ApplicationRecord
   enum :tipo_entrega, { retirada: 0, motoboy_uber: 1, correios_pac: 2, correios_sedex: 3 }
   enum :status, { pendente: 0, paga: 1, enviada: 2, concluida: 3, cancelada: 4 }
 
+  before_validation :set_defaults_desconto
   before_validation :set_data_venda, on: :create
   before_validation :generate_codigo_pedido, on: :create
 
@@ -19,13 +20,29 @@ class Venda < ApplicationRecord
   validates :subtotal_produtos, numericality: { greater_than_or_equal_to: 0 }
   validates :valor_frete, numericality: { greater_than_or_equal_to: 0 }
   validates :valor_desconto, numericality: { greater_than_or_equal_to: 0 }
+  validates :desconto_manual, numericality: { greater_than_or_equal_to: 0 }
+  validates :desconto_cupom, numericality: { greater_than_or_equal_to: 0 }
   validates :valor_total, numericality: { greater_than_or_equal_to: 0 }
   validates :tipo_entrega, presence: true
   validates :status, presence: true
   validates :data_venda, presence: true
   validates :motivo_cancelamento, presence: true, if: :cancelada?
+  validate :desconto_nao_excede_subtotal
 
   private
+
+  def set_defaults_desconto
+    self.desconto_manual ||= 0.0
+    self.desconto_cupom ||= 0.0
+  end
+
+  def desconto_nao_excede_subtotal
+    return unless valor_desconto.present? && subtotal_produtos.present?
+
+    if valor_desconto > subtotal_produtos
+      errors.add(:valor_desconto, "não pode ser maior que o subtotal dos produtos")
+    end
+  end
 
   def set_data_venda
     self.data_venda ||= Time.current
