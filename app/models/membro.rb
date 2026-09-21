@@ -12,6 +12,13 @@ class Membro < ApplicationRecord
   validates :data_entrada, presence: true
   validates :usuario_id, uniqueness: { scope: :empresa_id, message: "já é membro desta empresa" }
 
+  scope :ativos, -> { where(ativo: true) }
+  scope :inativos, -> { where(ativo: false) }
+  scope :proprietarios, -> { where(papel: :proprietario) }
+  scope :gerentes, -> { where(papel: :gerente) }
+  scope :atendentes, -> { where(papel: :atendente) }
+  scope :estoquistas, -> { where(papel: :estoquista) }
+
   private
 
   def set_data_entrada

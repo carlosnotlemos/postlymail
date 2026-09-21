@@ -5,6 +5,16 @@ RSpec.describe Cliente, type: :model do
     it 'belongs to empresa' do
       expect(described_class.reflect_on_association(:empresa).macro).to eq :belongs_to
     end
+
+    it 'has many enderecos' do
+      expect(described_class.reflect_on_association(:enderecos).macro).to eq :has_many
+    end
+
+    it 'has one endereco_padrao' do
+      assoc = described_class.reflect_on_association(:endereco_padrao)
+      expect(assoc.macro).to eq :has_one
+      expect(assoc.class_name).to eq 'Endereco'
+    end
   end
 
   describe 'callbacks' do

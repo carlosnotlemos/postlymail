@@ -1,6 +1,7 @@
 class Cliente < ApplicationRecord
   belongs_to :empresa
   has_many :enderecos, dependent: :destroy
+  has_one :endereco_padrao, -> { where(padrao: true) }, class_name: "Endereco"
   has_many :disparos, dependent: :destroy
   has_many :vendas, dependent: :restrict_with_error
 

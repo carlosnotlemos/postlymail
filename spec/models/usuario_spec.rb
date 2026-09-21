@@ -33,4 +33,41 @@ RSpec.describe Usuario, type: :model do
       expect(usuario.data_cadastro).to be_present
     end
   end
+
+  describe 'callbacks' do
+    it 'sanitizes email, nome and telefone before validation' do
+      usuario = build(:usuario, email: '  TESTE@EXEMPLO.COM  ', nome: '  João da Silva  ', telefone: '(11) 98765-4321')
+      usuario.valid?
+
+      expect(usuario.email).to eq('teste@exemplo.com')
+      expect(usuario.nome).to eq('João da Silva')
+      expect(usuario.telefone).to eq('11987654321')
+    end
+
+    it 'sets telefone to nil when empty or non-numeric' do
+      usuario = build(:usuario, telefone: '   ')
+      usuario.valid?
+
+      expect(usuario.telefone).to be_nil
+    end
+  end
+
+  describe 'scopes' do
+    let!(:usuario_ativo) { create(:usuario, ativo: true) }
+    let!(:usuario_inativo) { create(:usuario, ativo: false) }
+
+    describe '.ativos' do
+      it 'returns only active users' do
+        expect(Usuario.ativos).to include(usuario_ativo)
+        expect(Usuario.ativos).not_to include(usuario_inativo)
+      end
+    end
+
+    describe '.inativos' do
+      it 'returns only inactive users' do
+        expect(Usuario.inativos).to include(usuario_inativo)
+        expect(Usuario.inativos).not_to include(usuario_ativo)
+      end
+    end
+  end
 end
