@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_20_150003) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_23_201000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,6 +78,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_150003) do
 
   create_table "convites", force: :cascade do |t|
     t.datetime "aceito_em"
+    t.datetime "cancelado_em"
     t.bigint "convidado_por_id", null: false
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -86,8 +87,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_150003) do
     t.integer "papel", default: 0, null: false
     t.string "token", null: false
     t.datetime "updated_at", null: false
+    t.index ["cancelado_em"], name: "index_convites_on_cancelado_em"
     t.index ["convidado_por_id"], name: "index_convites_on_convidado_por_id"
-    t.index ["empresa_id", "email"], name: "index_convites_on_empresa_and_email_pendente", unique: true, where: "(aceito_em IS NULL)"
+    t.index ["empresa_id", "email"], name: "index_convites_on_empresa_and_email_pendente", unique: true, where: "((aceito_em IS NULL) AND (cancelado_em IS NULL))"
     t.index ["token"], name: "index_convites_on_token", unique: true
   end
 

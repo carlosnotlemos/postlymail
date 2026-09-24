@@ -139,7 +139,7 @@ module Membros
       if valor.is_a?(Symbol) || valor.is_a?(String)
         @atributos_param[:papel] = valor.to_s.downcase.strip
       elsif valor.is_a?(Integer)
-        nome_papel = Membro.papels.key(valor)
+        nome_papel = Membro.papeis.key(valor)
         @atributos_param[:papel] = nome_papel if nome_papel
       end
     end
@@ -209,7 +209,7 @@ module Membros
     def validar_papel
       if @atributos_param.key?(:papel)
         papel = @atributos_param[:papel]
-        unless Membro.papels.key?(papel.to_s)
+        unless Membro.papeis.key?(papel.to_s)
           return failure("Papel informado é inválido", error_code: :invalid_role)
         end
       end

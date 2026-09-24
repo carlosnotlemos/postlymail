@@ -240,10 +240,12 @@ Table Convites [headercolor: #3a0ca3] {
     token varchar(255) [ not null, unique, note: 'Token criptográfico seguro enviado na URL por e-mail' ]
     expira_em timestamp [ not null, note: 'Prazo limite para o aceite do convite (ex: 7 dias)' ]
     aceito_em timestamp [ note: 'Data e hora em que o convite foi aceito' ]
+    cancelado_em timestamp [ note: 'Data e hora em que o convite foi cancelado (soft delete)' ]
 
     indexes {
         (token) [ unique ]
-        (empresa_id, email) [ unique, note: 'WHERE aceito_em IS NULL' ]
+        (empresa_id, email) [ unique, note: 'WHERE aceito_em IS NULL AND cancelado_em IS NULL' ]
+        (cancelado_em)
     }
 }
 

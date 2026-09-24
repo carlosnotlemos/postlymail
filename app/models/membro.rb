@@ -5,6 +5,8 @@ class Membro < ApplicationRecord
 
   enum :papel, { atendente: 0, estoquista: 1, gerente: 2, proprietario: 3 }
 
+  singleton_class.alias_method :papels, :papeis
+
   before_validation :set_data_entrada, on: :create
 
   validates :papel, presence: true

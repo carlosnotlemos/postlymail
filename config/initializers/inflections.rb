@@ -27,4 +27,5 @@ ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.irregular "assinatura_fatura", "assinatura_faturas"
   inflect.irregular "webhook_log", "webhook_logs"
   inflect.irregular "identificador", "identificadores"
+  inflect.irregular "papel", "papeis"
 end

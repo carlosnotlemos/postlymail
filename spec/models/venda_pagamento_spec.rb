@@ -42,5 +42,15 @@ RSpec.describe VendaPagamento, type: :model do
       expect(subject).not_to be_valid
       expect(subject.errors[:gateway]).to be_present
     end
+
+    it 'defines correct status enum including cancelado' do
+      expect(described_class.statuses).to eq(
+        'pendente' => 0,
+        'aprovado' => 1,
+        'recusado' => 2,
+        'estornado' => 3,
+        'cancelado' => 4
+      )
+    end
   end
 end

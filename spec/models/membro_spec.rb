@@ -15,6 +15,11 @@ RSpec.describe Membro, type: :model do
       expect(assoc.macro).to eq :belongs_to
       expect(assoc.options[:optional]).to be true
     end
+
+    it 'defines papeis enum mapping with papels alias' do
+      expect(described_class.papeis).to eq({ 'atendente' => 0, 'estoquista' => 1, 'gerente' => 2, 'proprietario' => 3 })
+      expect(described_class.papels).to eq(described_class.papeis)
+    end
   end
 
   describe 'validations' do

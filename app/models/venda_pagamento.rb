@@ -3,7 +3,7 @@ class VendaPagamento < ApplicationRecord
 
   enum :gateway, { manual: 0, asaas: 1, stripe: 2, mercadopago: 3 }
   enum :forma_pagamento, { pix: 0, cartao_credito: 1, cartao_debito: 2, dinheiro: 3, boleto: 4 }
-  enum :status, { pendente: 0, aprovado: 1, recusado: 2, estornado: 3 }
+  enum :status, { pendente: 0, aprovado: 1, recusado: 2, estornado: 3, cancelado: 4 }
 
   before_validation :calcular_valor_liquido
 
