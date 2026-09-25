@@ -69,7 +69,7 @@ A implementação dos Service Objects deve seguir uma ordem que respeite as depe
 └────────────────────────────────┬────────────────────────────────┘
                                  │
 ┌────────────────────────────────▼────────────────────────────────┐
-│ FASE 5: SAAS RECORRENTE & MARKETING                             │
+│ FASE 5: SAAS RECORRENTE & MARKETING (CONCLUÍDO)                 │
 │ Planos ──► Assinaturas ──► Faturas │ Campanhas ──► Disparos    │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -327,9 +327,21 @@ Responsabilidades:
 - Geração de faturas.
 - Controle de cobrança recorrente.
 
+### Service Objects concluídos
+
+```ruby
+Planos::SalvarService (aliases: Planos::CadastrarService, Planos::CriarService, Planos::AtualizarService)
+Assinaturas::SalvarService (aliases: Assinaturas::CadastrarService, Assinaturas::CriarService, Assinaturas::AtualizarService, Assinaturas::ContratarService)
+Assinaturas::CancelarService (aliases: Assinaturas::EncerrarService, Assinaturas::DesativarService)
+Assinaturas::ProcessarInadimplentesService (aliases: Assinaturas::ProcessarInadimplenciaService, Assinaturas::VerificarInadimplentesService, AssinaturaFaturas::ProcessarInadimplentesService)
+AssinaturaFaturas::GerarService (aliases: AssinaturaFaturas::SalvarService, AssinaturaFaturas::CriarService, Assinaturas::GerarFaturaService)
+AssinaturaFaturas::PagarService (aliases: AssinaturaFaturas::LiquidarService, AssinaturaFaturas::ConfirmarPagamentoService, AssinaturaFaturas::RegistrarPagamentoService, Assinaturas::PagarFaturaService)
+AssinaturaFaturas::CancelarService (aliases: AssinaturaFaturas::AnularService, AssinaturaFaturas::EstornarService, Assinaturas::CancelarFaturaService)
+```
+
 ### Estado
 
-**Planejada.**
+**CONCLUÍDO.**
 
 ---
 
@@ -353,15 +365,28 @@ Canais previstos:
 
 Possíveis critérios de segmentação:
 
-- Histórico de compras.
+- Histórico de compras (`com_compras`, `sem_compras`, `todos`).
 - Produtos adquiridos.
 - Perfil do cliente.
 - Frequência de compras.
 - Outros critérios derivados dos dados transacionais.
 
+### Service Objects concluídos
+
+```ruby
+Campanhas::SalvarService (aliases: Campanhas::CadastrarService, Campanhas::CriarService, Campanhas::AtualizarService)
+Campanhas::DispararService (aliases: Campanhas::EnviarService, Campanhas::ExecutarService, Disparos::DispararCampanhaService)
+Campanhas::CancelarService
+Campanhas::DuplicarService
+Disparos::CriarService
+Disparos::ProcessarService (aliases: Disparos::EnviarService, Disparos::ExecutarService, Campanhas::ProcessarDisparoService)
+Disparos::AtualizarStatusService
+Disparos::CancelarService (alias: Disparos::AnularService)
+```
+
 ### Estado
 
-**Planejada.**
+**CONCLUÍDO.**
 
 ---
 
@@ -455,6 +480,14 @@ EMPRESAS
 | `AssinaturaFaturas::PagarService` (aliases: `LiquidarService`, `ConfirmarPagamentoService`, `RegistrarPagamentoService`, `Assinaturas::PagarFaturaService`) | SaaS Recorrente / Faturas | ✅ Concluído |
 | `AssinaturaFaturas::CancelarService` (aliases: `AnularService`, `EstornarService`, `Assinaturas::CancelarFaturaService`) | SaaS Recorrente / Faturas | ✅ Concluído |
 | `Assinaturas::ProcessarInadimplentesService` (aliases: `ProcessarInadimplenciaService`, `VerificarInadimplentesService`, `AssinaturaFaturas::ProcessarInadimplentesService`) | SaaS Recorrente | ✅ Concluído |
+| `Campanhas::SalvarService` (aliases: `CadastrarService`, `CriarService`, `AtualizarService`) | Automação de Marketing / Campanhas | ✅ Concluído |
+| `Campanhas::DispararService` (aliases: `EnviarService`, `ExecutarService`, `Disparos::DispararCampanhaService`) | Automação de Marketing / Campanhas | ✅ Concluído |
+| `Campanhas::CancelarService` | Automação de Marketing / Campanhas | ✅ Concluído |
+| `Campanhas::DuplicarService` | Automação de Marketing / Campanhas | ✅ Concluído |
+| `Disparos::CriarService` | Automação de Marketing / Disparos | ✅ Concluído |
+| `Disparos::ProcessarService` (aliases: `EnviarService`, `ExecutarService`, `Campanhas::ProcessarDisparoService`) | Automação de Marketing / Disparos | ✅ Concluído |
+| `Disparos::AtualizarStatusService` | Automação de Marketing / Disparos | ✅ Concluído |
+| `Disparos::CancelarService` (alias: `AnularService`) | Automação de Marketing / Disparos | ✅ Concluído |
 
 ---
 
@@ -1248,6 +1281,129 @@ Assinaturas::ProcessarInadimplentesService (aliases: Assinaturas::ProcessarInadi
 
 ---
 
+## Marco 19 — Campanhas (Automação de Marketing)
+
+**Status:** ✅ Concluído
+
+**Data:** 2026-09-25
+
+### O que foi feito
+
+- Implementação do ciclo completo de gerenciamento e orquestração de campanhas de automação de marketing (`Campanha`) para engajamento de clientes via E-mail e WhatsApp:
+  - `Campanhas::SalvarService` (com aliases `CadastrarService`, `CriarService` e `AtualizarService`).
+  - `Campanhas::CancelarService`.
+  - `Campanhas::DuplicarService`.
+  - `Campanhas::DispararService` (com aliases `EnviarService`, `ExecutarService` e `Disparos::DispararCampanhaService`).
+- **Criação e Manutenção de Campanhas (`SalvarService`):**
+  - Resolução polimórfica flexível de empresa (instância, ID numérico ou slug) e campanha (instância, ID ou identificador numérico).
+  - Normalização inteligente de enums (`canal`: `email`, `whatsapp`; `segmento`: `todos`, `com_compras`, `sem_compras`; `status`: `rascunho`, `agendada`, `enviando`, `concluida`, `cancelada`), sanitização de espaços em textos e conversão para datetime em `data_envio`.
+  - Isolamento multi-tenant estrito com checagem de empresa ativa (`:tenant_not_found`, `:unauthorized_tenant`, `:empresa_inactive`).
+  - Salvaguardas de integridade temporal: bloqueio de alteração em campanhas já concluídas (`:cannot_modify_completed_campaign`), canceladas (`:cannot_modify_cancelled_campaign`) ou em processo de envio (`:cannot_modify_sending_campaign`).
+  - Regras semânticas de conteúdo: obrigatoriedade de assunto para e-mails (`:email_subject_required`), garantia de que a campanha possua texto ou URL de mídia anexada (`:empty_content`) e validação de datas futuras para status agendado (`:scheduled_date_required`, `:scheduled_date_in_the_past`).
+- **Interrupção e Cancelamento (`CancelarService`):**
+  - Cancelamento seguro e auditado com motivo textual opcional.
+  - Suporte a idempotência (`ignorar_se_cancelada: true` / `:campaign_already_cancelled`).
+  - Bloqueio preventivo contra cancelamento de campanhas já concluídas (`:cannot_cancel_completed_campaign`).
+  - **Cancelamento em cascata de disparos pendentes:** com `cancelar_disparos_pendentes: true` (padrão), localiza e transiciona automaticamente todos os disparos enfileirados (`status: :na_fila`) para `:cancelado`, registrando a justificativa da interrupção.
+- **Clonagem e Duplicação (`DuplicarService`):**
+  - Duplicação ágil de campanhas existentes com geração de novo rascunho (`status: :rascunho`), preservando canal, segmento, assunto, conteúdo e URL de mídia.
+  - Atribuição automática de nome (`"#{campanha.nome} (Cópia)"` ou nome customizado) e isolamento multi-tenant.
+- **Orquestração de Disparos em Duas Fases (`DispararService`):**
+  - Resolução inteligente de público-alvo com base no canal e segmentação comportamental:
+    - Respeito rigoroso ao consentimento de marketing (`aceita_marketing: true`) e clientes ativos (`ativo: true`).
+    - Validação de presença do meio de contato (e-mail não nulo para canal de e-mail, telefone não nulo para WhatsApp).
+    - Segmentação dinâmica: `todos`, `com_compras` (clientes com histórico de compras não canceladas) e `sem_compras` (prospects sem compras concluídas).
+    - Suporte a público customizado via lista de instâncias ou IDs (`clientes: [...]`, `cliente_ids: [...]`).
+  - **Arquitetura em Duas Fases:**
+    - **Fase 1 (Transação Rápida no Banco):** Marca a campanha como `:enviando`, enfileira atomicamente os registros na tabela `disparos` com status `:na_fila` e encerra a transação de banco rapidamente, evitando locks longos.
+    - **Fase 2 (Processamento Unitário Desacoplado):** Itera sobre os disparos de forma unitária através de `Disparos::ProcessarService`, permitindo operação síncrona imediata ou desacoplamento assíncrono para Background Jobs. Ao finalizar o lote, transiciona a campanha automaticamente para `:concluida` com timestamp `data_envio: Time.current`.
+- Enriquecimento do model `Campanha`: validação condicional de mídia e conteúdo (`garantir_conteudo_com_url_midia`).
+- Cobertura de 100% de testes no RSpec com 50 novos exemplos dedicados em `spec/services/campanhas/` (19 no salvar, 9 no cancelar, 7 no duplicar e 15 no disparar).
+
+### Service Objects criados
+
+```ruby
+Campanhas::SalvarService (aliases: Campanhas::CadastrarService, Campanhas::CriarService, Campanhas::AtualizarService)
+Campanhas::DispararService (aliases: Campanhas::EnviarService, Campanhas::ExecutarService, Disparos::DispararCampanhaService)
+Campanhas::CancelarService
+Campanhas::DuplicarService
+```
+
+### Tabelas envolvidas
+
+- `campanhas`
+- `disparos`
+- `clientes`
+- `vendas`
+- `empresas`
+
+### Decisões arquiteturais
+
+- **Arquitetura em Duas Fases para Escalabilidade:** A separação entre enfileiramento atômico (Fase 1) e processamento unitário de mensageria (Fase 2) garante que uma campanha com milhares de clientes não bloqueie o banco de dados durante o consumo de APIs externas de e-mail ou WhatsApp.
+- **Segmentação Derivada dos Dados Transacionais:** A filtragem de público-alvo cruza diretamente os dados de `vendas` da empresa, permitindo reengajamento automatizado de clientes inativos ou promoções exclusivas para compradores recorrentes.
+
+---
+
+## Marco 20 — Disparos (Processamento e Mensageria)
+
+**Status:** ✅ Concluído
+
+**Data:** 2026-09-25
+
+### O que foi feito
+
+- Implementação do ciclo unitário de entrega e mensageria de disparos individuais (`Disparo`) via e-mail e WhatsApp através de Service Objects dedicados:
+  - `Disparos::CriarService`.
+  - `Disparos::ProcessarService` (com aliases `EnviarService`, `ExecutarService` e `Campanhas::ProcessarDisparoService`).
+  - `Disparos::AtualizarStatusService`.
+  - `Disparos::CancelarService` (com alias `AnularService`).
+- **Criação e Enfileiramento Individual (`CriarService`):**
+  - Resolução da campanha e cliente por instância ou ID numérico.
+  - Verificação de consentimento de marketing (`:client_does_not_accept_marketing`), com override consciente (`ignorar_consentimento: true` ou `forcar: true`).
+  - Preenchimento e resolução automática do destinatário caso omitido (extrai `email` ou `telefone` do cliente conforme o canal da campanha).
+  - Prevenção semântica de disparos duplicados para o mesmo cliente na mesma campanha (`:disparo_already_exists`), com opção de liberação explícita (`permitir_duplicado: true`).
+  - Suporte a envio imediato após a persistência (`enviar_agora: true` ou `processar_agora: true`).
+- **Processamento e Entrega de Mensagem (`ProcessarService`):**
+  - Resolução polimórfica por instância de `Disparo`, ID numérico ou `identificador_externo`.
+  - Validação sintática do destinatário: regex rigorosa de e-mail (`URI::MailTo::EMAIL_REGEXP`) para campanhas de e-mail e validação de dígitos numéricos para WhatsApp.
+  - Transição automática para `:rejeitado` caso o formato do destinatário seja inválido, com gravação de `mensagem_erro`.
+  - Simulação de falha controlada para testes e rotinas de contingência (`simular_falha: true`).
+  - Emissão bem-sucedida com geração/preservação de `identificador_externo` único (`pst_...`), timestamp `enviado_em: Time.current` e transição para status `:enviado`.
+  - Proteção contra reprocessamento indevido de disparos cancelados (`:disparo_cancelled`), rejeitados (`:disparo_rejected`) ou já enviados (`:disparo_already_processed`), com override via `forcar: true`.
+- **Conciliação e Webhooks de Mensageria (`AtualizarStatusService`):**
+  - Resolução flexível por ID ou `identificador_externo` retornado por provedores externos (ex: SendGrid, Mailgun, Z-API, Evolution API).
+  - **Matriz de Transição de Estados:** Implementação da máquina de estados com transições estritas (`TRANSICOES_VALIDAS`), impedindo recuos inválidos (e.g. de `entregue` para `na_fila`), com override para sincronizações extraordinárias (`forcar: true`).
+  - Registro de erros operacionais (`mensagem_erro`) em transições para `falhou` ou `rejeitado`, e limpeza em caso de entrega confirmada.
+- **Cancelamento Individual (`CancelarService`):**
+  - Cancelamento lógico com gravação de motivo e transição para `status: :cancelado`.
+  - Proteção contra cancelamento de disparos já expedidos (`:cannot_cancel_sent_disparo`).
+  - Suporte a idempotência (`ignorar_se_cancelado: true` / `:disparo_already_cancelled`).
+- Enriquecimento do model `Disparo`: adição explícita de `cancelado: 5` no enum de status e testes correspondentes no model.
+- Cobertura de 100% de testes no RSpec com 50 novos exemplos dedicados em `spec/services/disparos/` (18 no criar, 13 no processar, 11 no atualizar status e 8 no cancelar).
+
+### Service Objects criados
+
+```ruby
+Disparos::CriarService
+Disparos::ProcessarService (aliases: Disparos::EnviarService, Disparos::ExecutarService, Campanhas::ProcessarDisparoService)
+Disparos::AtualizarStatusService
+Disparos::CancelarService (alias: Disparos::AnularService)
+```
+
+### Tabelas envolvidas
+
+- `disparos`
+- `campanhas`
+- `clientes`
+- `empresas`
+
+### Decisões arquiteturais
+
+- **Resiliência para Webhooks Externos:** A identificação por `identificador_externo` e a matriz rigorosa de transição de status no `AtualizarStatusService` garantem que o ERP processe confirmações de entrega, rebotes (*bounces*) e leituras de forma idempotente e segura contra mensagens fora de ordem enviadas pelos provedores.
+- **Rastreabilidade e Proteção ao Cliente:** Disparos respeitam a política de consentimento de marketing e gravam mensagens de erro claras caso o destinatário possua dados de contato inválidos, protegendo a reputação de envio da plataforma.
+
+---
+
 # 9. Registro de Alterações Futuras
 
 
@@ -1311,24 +1467,32 @@ Os seguintes princípios devem orientar a implementação dos próximos módulos
 
 # 11. Estado Atual do Projeto
 
-**Última atualização:** 2026-09-23
+**Última atualização:** 2026-09-25
 
 ### Fases
 
-- [x] Fase 1 — Fundação Multi-tenant e Gestão de Acesso
-- [x] Fase 2 — Catálogo e Inventário
-- [x] Fase 3 — Suporte Prévio à Venda
-- [x] Fase 4 — Núcleo de Vendas e Pós-venda (Concluído: Vendas, Pagamentos e Devoluções)
-- [ ] Fase 5 — SaaS Recorrente e Marketing
+- [x] Fase 1 — Fundação Multi-tenant e Gestão de Acesso (Empresas, Usuários, Membros e Convites)
+- [x] Fase 2 — Catálogo e Inventário (Categorias, Produtos, Variações, Insumos, Estoques e Movimentações)
+- [x] Fase 3 — Suporte Prévio à Venda (Clientes, Endereços e Cupons)
+- [x] Fase 4 — Núcleo de Vendas e Pós-venda (Custos, Vendas, Itens, Pagamentos e Devoluções)
+- [x] Fase 5 — SaaS Recorrente e Marketing (Planos, Assinaturas, Faturas, Régua de Inadimplência, Campanhas e Disparos)
+
+> **🎉 Todos os Service Objects previstos para a camada de domínio do ERP e SaaS estão 100% implementados e cobertos por testes unitários no RSpec.**
 
 ### Próximo foco
 
+Com a camada de domínio e regras de negócio 100% consolidada em Service Objects, a próxima etapa da esteira de desenvolvimento compreende:
+
 ```text
-Campanhas
-   ↓
-Disparos
-   ↓
-Campanhas::SalvarService / Campanhas::DispararService
+1. Background Jobs / Workers (SolidQueue / Sidekiq)
+   ├── Processamento assíncrono em lote de Disparos de Campanhas
+   └── Rotina agendada diária (Cron) para Assinaturas::ProcessarInadimplentesService
+
+2. Camada de Controladores HTTP, APIs REST e Webhooks
+   ├── Endpoints para operações do ERP (Vendas, Catálogo, Clientes, Assinaturas)
+   └── Webhooks de adquirentes e gateways (Asaas, Stripe, SendGrid, Z-API)
+
+3. Interface de Usuário / Views e Dashboards
 ```
 
 Este documento deve ser tratado como um **registro histórico vivo da arquitetura e do desenvolvimento**, sendo atualizado a cada marco relevante do projeto.
