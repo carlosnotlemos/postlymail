@@ -67,6 +67,19 @@ RSpec.describe Assinatura, type: :model do
       expect(described_class.suspensas).to include(ass_suspensa)
     end
 
+    it 'filters by inadimplentes and passiveis_de_cobranca correctly' do
+      ass_ativa = create(:assinatura, empresa: empresa, plano: plano, status: :ativa)
+      empresa2 = create(:empresa, slug: 'empresa-2', email: 'emp2@loja.com')
+      ass_atrasada = create(:assinatura, empresa: empresa2, plano: plano, status: :atrasada)
+      empresa3 = create(:empresa, slug: 'empresa-3', email: 'emp3@loja.com')
+      ass_suspensa = create(:assinatura, empresa: empresa3, plano: plano, status: :suspensa)
+      empresa4 = create(:empresa, slug: 'empresa-4', email: 'emp4@loja.com')
+      ass_cancelada = create(:assinatura, empresa: empresa4, plano: plano, status: :cancelada)
+
+      expect(described_class.inadimplentes).to contain_exactly(ass_atrasada, ass_suspensa)
+      expect(described_class.passiveis_de_cobranca).to contain_exactly(ass_ativa, ass_atrasada, ass_suspensa)
+    end
+
     it 'filters by vigentes correctly' do
       vigente = create(:assinatura, empresa: empresa, plano: plano, data_inicio: 5.days.ago.to_date, data_fim: 25.days.from_now.to_date)
       empresa2 = create(:empresa, slug: 'empresa-antiga', email: 'antiga@loja.com')
@@ -90,6 +103,18 @@ RSpec.describe Assinatura, type: :model do
       it 'returns false if expired' do
         assinatura = build(:assinatura, empresa: empresa, plano: plano, data_inicio: 20.days.ago.to_date, data_fim: 5.days.ago.to_date)
         expect(assinatura.vigente?).to be false
+      end
+    end
+
+    describe '#inadimplente?' do
+      it 'returns true when status is atrasada or suspensa' do
+        ass1 = build(:assinatura, status: :atrasada)
+        ass2 = build(:assinatura, status: :suspensa)
+        ass3 = build(:assinatura, status: :ativa)
+
+        expect(ass1.inadimplente?).to be true
+        expect(ass2.inadimplente?).to be true
+        expect(ass3.inadimplente?).to be false
       end
     end
 

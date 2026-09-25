@@ -16,8 +16,14 @@ class Assinatura < ApplicationRecord
   scope :suspensas, -> { where(status: :suspensa) }
   scope :pendentes, -> { where(status: :pendente) }
   scope :atrasadas, -> { where(status: :atrasada) }
+  scope :inadimplentes, -> { where(status: %i[atrasada suspensa]) }
+  scope :passiveis_de_cobranca, -> { where(status: %i[pendente ativa atrasada suspensa]) }
   scope :vigentes, ->(data = Date.current) { where("data_inicio <= :data AND (data_fim IS NULL OR data_fim >= :data)", data: data) }
   scope :recentes, -> { order(created_at: :desc) }
+
+  def inadimplente?
+    atrasada? || suspensa?
+  end
 
   def vigente?(data = Date.current)
     return false if data_inicio.blank?

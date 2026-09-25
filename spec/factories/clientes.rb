@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :cliente do
     empresa
     nome { "João Pereira" }
-    documento { "12345678901" }
+    sequence(:documento) { |n| sprintf("%011d", 12345678900 + n) }
     sequence(:email) { |n| "cliente#{n}@gmail.com" }
     telefone { "85999998888" }
     ativo { true }

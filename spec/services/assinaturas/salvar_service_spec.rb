@@ -228,6 +228,63 @@ RSpec.describe Assinaturas::SalvarService, type: :service do
       end
     end
 
+    context 'quando a empresa possui assinatura atrasada ou suspensa (migração de inadimplente)' do
+      let!(:assinatura_atrasada) do
+        create(:assinatura, empresa: empresa, plano: plano_start, status: :atrasada)
+      end
+
+      let!(:fatura_pendente_antiga) do
+        create(:assinatura_fatura, assinatura: assinatura_atrasada, status: :pendente, data_vencimento: 5.days.ago.to_date)
+      end
+
+      it 'permite migrar substituindo a assinatura atrasada e cancelando faturas pendentes por padrão' do
+        resultado = described_class.call(
+          empresa: empresa,
+          plano: plano_pro,
+          substituir_atual: true
+        )
+
+        expect(resultado).to be_success
+        nova = resultado.data[:assinatura]
+        expect(nova.status).to eq('ativa')
+        expect(nova.plano).to eq(plano_pro)
+
+        assinatura_atrasada.reload
+        expect(assinatura_atrasada.status).to eq('cancelada')
+        expect(assinatura_atrasada.data_cancelamento).to be_present
+        expect(fatura_pendente_antiga.reload.status).to eq('cancelada')
+      end
+
+      it 'permite manter faturas anteriores abertas se cancelar_faturas_anteriores for false' do
+        resultado = described_class.call(
+          empresa: empresa,
+          plano: plano_pro,
+          substituir_atual: true,
+          cancelar_faturas_anteriores: false
+        )
+
+        expect(resultado).to be_success
+        expect(fatura_pendente_antiga.reload.status).to eq('pendente')
+      end
+
+      it 'permite migrar quando a assinatura estiver suspensa e a empresa inativa, reativando a empresa' do
+        assinatura_atrasada.update!(status: :suspensa)
+        empresa.update!(ativo: false)
+
+        resultado = described_class.call(
+          empresa: empresa,
+          plano: plano_pro,
+          substituir_atual: true
+        )
+
+        expect(resultado).to be_success
+        nova = resultado.data[:assinatura]
+        expect(nova.status).to eq('ativa')
+        expect(assinatura_atrasada.reload.status).to eq('cancelada')
+        expect(empresa.reload.ativo).to be true
+      end
+    end
+
     context 'quando atualizando uma assinatura existente' do
       let!(:assinatura) { create(:assinatura, empresa: empresa, plano: plano_start, valor: 49.90, ciclo: :mensal) }
 

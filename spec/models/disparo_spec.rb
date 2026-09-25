@@ -29,5 +29,11 @@ RSpec.describe Disparo, type: :model do
       subject.status = nil
       expect(subject).not_to be_valid
     end
+
+    it 'permite status cancelado' do
+      subject.status = :cancelado
+      expect(subject).to be_valid
+      expect(subject.cancelado?).to be true
+    end
   end
 end

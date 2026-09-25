@@ -18,6 +18,9 @@ module Assinaturas
       atributos: nil,
       substituir_atual: false,
       cancelar_anterior: false,
+      cancelar_faturas_anteriores: true,
+      permitir_empresa_inativa: false,
+      reativar_empresa: true,
       gerar_fatura_inicial: false,
       **kwargs
     )
@@ -31,6 +34,9 @@ module Assinaturas
       @plano = resolver_plano(@plano_param) || @assinatura&.plano
 
       @substituir_atual = substituir_atual || cancelar_anterior || kwargs[:substituir_atual] || kwargs[:cancelar_anterior] || false
+      @cancelar_faturas_anteriores = kwargs.key?(:cancelar_faturas_anteriores) ? kwargs[:cancelar_faturas_anteriores] : cancelar_faturas_anteriores
+      @permitir_empresa_inativa = kwargs.key?(:permitir_empresa_inativa) ? kwargs[:permitir_empresa_inativa] : permitir_empresa_inativa
+      @reativar_empresa = kwargs.key?(:reativar_empresa) ? kwargs[:reativar_empresa] : reativar_empresa
       @gerar_fatura_inicial = gerar_fatura_inicial || kwargs[:gerar_fatura_inicial] || false
 
       @atributos_param = extrair_atributos(atributos, kwargs)
@@ -213,7 +219,7 @@ module Assinaturas
         return failure("Empresa não informada ou não encontrada", error_code: :tenant_not_found)
       end
 
-      if !@empresa.ativo?
+      if !@empresa.ativo? && !(@substituir_atual || @permitir_empresa_inativa)
         return failure("A empresa encontra-se inativa", error_code: :empresa_inactive)
       end
 
@@ -252,11 +258,14 @@ module Assinaturas
     end
 
     def validar_conflito_assinatura_ativa
+      outras_vigentes = @empresa.assinaturas.where(status: %i[ativa atrasada suspensa])
+      outras_vigentes = outras_vigentes.where.not(id: @assinatura.id) if @assinatura.present?
+      @assinaturas_a_substituir = outras_vigentes
+
       status_alvo = @atributos_param[:status] || @assinatura&.status
       return nil unless status_alvo == "ativa"
 
-      outras_ativas = @empresa.assinaturas.where(status: :ativa)
-      outras_ativas = outras_ativas.where.not(id: @assinatura.id) if @assinatura.present?
+      outras_ativas = @assinaturas_a_substituir.where(status: :ativa)
       @assinatura_ativa_conflitante = outras_ativas.first
 
       if @assinatura_ativa_conflitante.present? && !@substituir_atual
@@ -268,15 +277,23 @@ module Assinaturas
 
     def executar_salvamento
       fatura_gerada = nil
-      assinatura_substituida = nil
+      assinaturas_substituidas = []
 
       ActiveRecord::Base.transaction do
-        if @assinatura_ativa_conflitante.present? && @substituir_atual
-          @assinatura_ativa_conflitante.update!(
-            status: :cancelada,
-            data_cancelamento: Time.current
-          )
-          assinatura_substituida = @assinatura_ativa_conflitante
+        if @assinaturas_a_substituir.present? && @substituir_atual
+          @assinaturas_a_substituir.each do |anterior|
+            anterior.update!(
+              status: :cancelada,
+              data_cancelamento: Time.current
+            )
+            if @cancelar_faturas_anteriores
+              anterior.faturas.where(status: :pendente).update_all(
+                status: AssinaturaFatura.statuses[:cancelada],
+                updated_at: Time.current
+              )
+            end
+            assinaturas_substituidas << anterior
+          end
         end
 
         if @assinatura.nil?
@@ -288,6 +305,10 @@ module Assinaturas
         end
 
         @assinatura.save!
+
+        if @reativar_empresa && @assinatura.ativa? && !@empresa.ativo?
+          @empresa.update!(ativo: true)
+        end
 
         if @gerar_fatura_inicial
           fatura_gerada = AssinaturaFatura.create!(
@@ -305,7 +326,8 @@ module Assinaturas
         plano: @plano
       }
       dados_retorno[:fatura] = fatura_gerada if fatura_gerada.present?
-      dados_retorno[:assinatura_substituida] = assinatura_substituida if assinatura_substituida.present?
+      dados_retorno[:assinatura_substituida] = assinaturas_substituidas.first if assinaturas_substituidas.present?
+      dados_retorno[:assinaturas_substituidas] = assinaturas_substituidas if assinaturas_substituidas.present?
 
       success(dados_retorno)
     rescue ActiveRecord::RecordInvalid => e

@@ -454,6 +454,7 @@ EMPRESAS
 | `AssinaturaFaturas::GerarService` (aliases: `SalvarService`, `CriarService`, `Assinaturas::GerarFaturaService`) | SaaS Recorrente / Faturas | ✅ Concluído |
 | `AssinaturaFaturas::PagarService` (aliases: `LiquidarService`, `ConfirmarPagamentoService`, `RegistrarPagamentoService`, `Assinaturas::PagarFaturaService`) | SaaS Recorrente / Faturas | ✅ Concluído |
 | `AssinaturaFaturas::CancelarService` (aliases: `AnularService`, `EstornarService`, `Assinaturas::CancelarFaturaService`) | SaaS Recorrente / Faturas | ✅ Concluído |
+| `Assinaturas::ProcessarInadimplentesService` (aliases: `ProcessarInadimplenciaService`, `VerificarInadimplentesService`, `AssinaturaFaturas::ProcessarInadimplentesService`) | SaaS Recorrente | ✅ Concluído |
 
 ---
 
@@ -1197,6 +1198,53 @@ AssinaturaFaturas::CancelarService (aliases: AssinaturaFaturas::AnularService, A
 - **Desacoplamento do Ciclo de Faturas do SaaS:** O módulo `AssinaturaFaturas` opera em sincronia com `Assinaturas`, garantindo que eventos de pagamento (e.g. webhooks de gateways de pagamento) reativem automaticamente a assinatura do tenant e calculem as novas datas de vigência (`data_fim`).
 - **Prorrogação Proporcional de Ciclos:** Ao liquidar uma fatura, o serviço analisa o ciclo contratado (`mensal`, `trimestral`, `anual`) e amplia a vigência sem sobrescrever dias remanescentes não usufruídos caso a fatura seja quitada antecipadamente.
 - **Idempotência para Webhooks e Mensageria:** Tanto o `PagarService` quanto o `CancelarService` oferecem flags de idempotência (`ignorar_se_paga: true`, `ignorar_se_cancelada: true`), tornando a arquitetura resiliente a reentregas de webhooks e retentativas automáticas de filas assíncronas.
+
+---
+
+## Marco 18 — Processamento de Inadimplentes e Régua de Cobrança (SaaS Recorrente)
+
+**Status:** ✅ Concluído
+
+**Data:** 2026-09-25
+
+### O que foi feito
+
+- Implementação do Service Object `Assinaturas::ProcessarInadimplentesService` (com aliases `ProcessarInadimplenciaService`, `VerificarInadimplentesService` e `AssinaturaFaturas::ProcessarInadimplentesService`) para gestão e execução da régua de cobrança/inadimplência do SaaS.
+- **Régua de Inadimplência e Escalonamento de Sanções:**
+  - **Identificação de Débito:** Detecção de faturas em aberto (`status: :pendente`) com `data_vencimento < data_referencia`.
+  - **Atrasada (`status: :atrasada`):** Transição de assinaturas com faturas vencidas além do período de carência (`dias_carencia`, padrão: `0`).
+  - **Suspensa (`status: :suspensa`):** Transição de assinaturas com débitos que excedem a tolerância (`dias_para_suspensao`, padrão: `7` dias).
+  - **Bloqueio do Tenant:** Bloqueio preventivo da empresa (`empresa.update!(ativo: false)`) quando sua assinatura é suspensa, refletindo a regra de domínio registrada em `Empresas.ativo: 'Bloqueio de inadimplência ou cancelamento'`.
+  - **Cancelamento Automático:** Suporte a encerramento compulsório para inadimplência prolongada (`cancelar_inadimplentes: true` e `dias_para_cancelamento`, e.g. 30 dias), preenchendo `data_cancelamento: Time.current`.
+- **Reconciliação e Reativação Automática (`reativar_adimplentes: true`):**
+  - Assinaturas marcadas como `atrasada` ou `suspensa` que regularizam seus débitos (faturas quitadas ou canceladas) retornam automaticamente para `status: :ativa`.
+  - Desbloqueio e reativação da empresa (`empresa.update!(ativo: true)`) caso não haja outras assinaturas inadimplentes atreladas ao tenant.
+- **Flexibilidade Operacional e Escopos de Execução:**
+  - Suporte a execução em lote (varredura geral para rotinas de Cron/Background Jobs).
+  - Suporte a execução restrita por tenant (`empresa`) ou assinatura individual (`assinatura`).
+  - Modo de simulação (`dry_run: true`) para relatórios prévios sem alteração de banco de dados.
+- **Enriquecimento do Model `Assinatura`:**
+  - Escopos: `.inadimplentes` (atrasadas ou suspensas) e `.passiveis_de_cobranca`.
+  - Método utilitário `#inadimplente?`.
+- Cobertura de 100% de testes no RSpec com 17 novos testes no `ProcessarInadimplentesService` e testes adicionais no model `Assinatura`, mantendo a suíte completa da aplicação com 964 testes sem nenhuma falha.
+
+### Service Object criado
+
+```ruby
+Assinaturas::ProcessarInadimplentesService (aliases: Assinaturas::ProcessarInadimplenciaService, Assinaturas::VerificarInadimplentesService, AssinaturaFaturas::ProcessarInadimplentesService)
+```
+
+### Tabelas envolvidas
+
+- `assinaturas`
+- `assinatura_faturas`
+- `empresas`
+
+### Decisões arquiteturais
+
+- **Régua de Cobrança Unificada e Bidirecional:** O service não apenas aplica sanções com base no tempo de atraso da fatura mais antiga, como também atua como reconciliador, reativando clientes adimplentes automaticamente caso seus débitos tenham sido sanados.
+- **Bloqueio Transacional do Tenant:** A inativação da empresa (`ativo: false`) ocorre em perfeita sintonia com a suspensão da assinatura, garantindo que o tenant inadimplente tenha seu acesso bloqueado de acordo com a política de governança da plataforma.
+- **Migração e Regularização de Assinaturas Inadimplentes (`SalvarService`):** O `SalvarService` suporta a substituição e migração de assinaturas `atrasadas` ou `suspensas` (`substituir_atual: true`), cancelando automaticamente as faturas pendentes da assinatura anterior (`cancelar_faturas_anteriores: true`) e reativando o tenant no banco (`reativar_empresa: true`), viabilizando a regularização imediata de clientes inadimplentes.
 
 ---
 
