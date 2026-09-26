@@ -28,7 +28,7 @@ RSpec.describe WebhookLog, type: :model do
       duplicate = build(:webhook_log, provedor: :asaas, identificador_externo: 'id_123')
       expect(duplicate).not_to be_valid
 
-      other_provider = build(:webhook_log, provedor: :stripe, identificador_externo: 'id_123')
+      other_provider = build(:webhook_log, provedor: :resend, identificador_externo: 'id_123')
       expect(other_provider).to be_valid
     end
   end

@@ -132,7 +132,7 @@ Table Campanhas [headercolor: #8338ec] {
 Table Venda_pagamentos [headercolor: #2b9348] {
     id bigint [ pk, increment, not null ]
     venda_id bigint [ not null ]
-    gateway integer [ not null, default: 0, note: '0: manual, 1: asaas, 2: stripe, 3: mercadopago' ]
+    gateway integer [ not null, default: 0, note: '0: manual, 1: asaas' ]
     gateway_id varchar(255) [ note: 'ID retornado pelo gateway (ex: pay_123)' ]
     valor decimal(10,2) [ not null, default: 0, note: 'Valor cobrado' ]
     taxa_operadora decimal(10,2) [ not null, default: 0, note: 'Taxa retida pela maquininha/gateway' ]
@@ -283,7 +283,7 @@ Table Estoque_movimentacoes [headercolor: #175e7a] {
 
 Table Webhook_logs [headercolor: #2b9348] {
     id bigint [ pk, increment, not null ]
-    provedor integer [ not null, default: 0, note: '0: asaas, 1: stripe, 2: mercadopago, 3: resend, 4: twilio, 5: zapi' ]
+    provedor integer [ not null, default: 0, note: '0: asaas, 1: resend' ]
     evento varchar(255) [ note: 'Ex: PAYMENT_RECEIVED, payment_intent.succeeded' ]
     identificador_externo varchar(255) [ note: 'ID do objeto no provedor (pay_123, re_abc456, wamid_xyz)' ]
     payload jsonb [ not null, default: '{}', note: 'Corpo bruto da requisição HTTP recebida' ]

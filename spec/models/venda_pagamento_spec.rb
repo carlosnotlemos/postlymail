@@ -52,5 +52,12 @@ RSpec.describe VendaPagamento, type: :model do
         'cancelado' => 4
       )
     end
+
+    it 'defines correct gateway enum with only manual and asaas' do
+      expect(described_class.gateways).to eq(
+        'manual' => 0,
+        'asaas' => 1
+      )
+    end
   end
 end

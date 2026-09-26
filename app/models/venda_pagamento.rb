@@ -1,7 +1,7 @@
 class VendaPagamento < ApplicationRecord
   belongs_to :venda
 
-  enum :gateway, { manual: 0, asaas: 1, stripe: 2, mercadopago: 3 }
+  enum :gateway, { manual: 0, asaas: 1 }
   enum :forma_pagamento, { pix: 0, cartao_credito: 1, cartao_debito: 2, dinheiro: 3, boleto: 4 }
   enum :status, { pendente: 0, aprovado: 1, recusado: 2, estornado: 3, cancelado: 4 }
 
