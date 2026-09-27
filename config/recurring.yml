@@ -1,15 +1,26 @@
-# examples:
-#   periodic_cleanup:
-#     class: CleanSoftDeletedRecordsJob
-#     queue: background
-#     args: [ 1000, { batch_size: 500 } ]
-#     schedule: every hour
-#   periodic_cleanup_with_command:
-#     command: "SoftDeletedRecord.due.delete_all"
-#     priority: 2
-#     schedule: at 5am every day
+# Recurring jobs configuration for Solid Queue in Rails 8
 
 production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+
+  monitorar_campanhas:
+    class: Campanhas::MonitorarCampanhasJob
+    queue: default
+    schedule: every minute
+
+  rotina_diaria_billing:
+    class: Assinaturas::RotinaDiariaBillingJob
+    queue: default
+    schedule: at 3am every day
+
+  expirar_pagamentos_pendentes:
+    class: Vendas::ExpirarPagamentosPendentesJob
+    queue: default
+    schedule: every 30 minutes
+
+  reprocessar_webhooks_falhos:
+    class: Webhooks::ReprocessarFalhasJob
+    queue: default
+    schedule: every hour
