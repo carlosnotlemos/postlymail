@@ -439,9 +439,8 @@
         <div class="glass-card" id="view-form-venda" style="display: none;">
           <div class="form-group full-width">
             <label>Selecione o Cliente (Dono da Compra)</label>
-            <select id="compra-cliente">
-              <option disabled selected>Carregando clientes...</option>
-            </select>
+            <input type="text" id="compra-cliente" list="lista-clientes-compra" placeholder="Digite para pesquisar o cliente..." autocomplete="off">
+            <datalist id="lista-clientes-compra"></datalist>
           </div>
 
           <div class="form-grid" style="margin-top: 20px;">
@@ -465,13 +464,12 @@
           <div class="form-grid" style="align-items: end;">
             <div class="form-group">
               <label>Produto</label>
-              <select id="compra-produto" onchange="calcularSubtotal()">
-                <option disabled selected>Carregando...</option>
-              </select>
+              <input type="text" id="compra-produto" list="lista-produtos-compra" placeholder="Digite para pesquisar o produto..." autocomplete="off" onchange="calcularSubtotal()" oninput="calcularSubtotal()">
+              <datalist id="lista-produtos-compra"></datalist>
             </div>
             <div class="form-group">
               <label>Qtd</label>
-              <input type="number" id="compra-qtd" value="1" min="1" onchange="calcularSubtotal()">
+              <input type="number" id="compra-qtd" value="1" min="1" onchange="calcularSubtotal()" oninput="calcularSubtotal()">
             </div>
             <div class="form-group">
               <label>Subtotal (R$)</label>

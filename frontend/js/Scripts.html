@@ -34,6 +34,7 @@
     renderizarDashboard();
     renderizarTabelaClientes(clientesGlobais);
     renderizarTabelaProdutos(produtosGlobais);
+    popularDatalistCompra();
     renderizarTabelaEstoque(estoqueGlobais);
     renderizarTabelaHistoricoEstoque(historicoEstoqueGlobais);
     atualizarSelectProdutosHistorico();
@@ -216,29 +217,38 @@
   }
 
   function calcularSubtotal() {
-    const nomeProduto = document.getElementById('compra-produto').value;
+    const nomeProduto = (document.getElementById('compra-produto').value || '').trim();
     const qtd = document.getElementById('compra-qtd').value;
-    const produto = produtosGlobais.find(p => p[0] === nomeProduto);
+    const produto = (produtosGlobais || []).find(p => p[0] && p[0].trim().toLowerCase() === nomeProduto.toLowerCase());
 
     if (produto && qtd) {
       const subtotal = parseFloat(produto[1]) * parseInt(qtd);
       document.getElementById('compra-subtotal').value = subtotal.toFixed(2);
+    } else {
+      document.getElementById('compra-subtotal').value = '';
     }
   }
 
   function adicionarAoCarrinho() {
-    const produtoNome = document.getElementById('compra-produto').value;
+    const inputProduto = document.getElementById('compra-produto');
+    const produtoDigitado = (inputProduto ? inputProduto.value : '').trim();
     const qtd = parseInt(document.getElementById('compra-qtd').value);
     const subtotalStr = document.getElementById('compra-subtotal').value;
     const subtotal = parseFloat(subtotalStr);
 
-    if (!produtoNome || produtoNome === "") return showToast("Por favor, selecione um produto primeiro.", false);
+    if (!produtoDigitado) return showToast("Por favor, selecione ou digite um produto primeiro.", false);
+
+    const produto = (produtosGlobais || []).find(p => p[0] && p[0].trim().toLowerCase() === produtoDigitado.toLowerCase());
+    if (!produto) {
+      return showToast(`O produto "${produtoDigitado}" não foi encontrado no catálogo. Selecione um produto da lista.`, false);
+    }
+
     if (isNaN(subtotal) || subtotal <= 0) return showToast("Quantidade ou valor inválido.", false);
 
-    carrinhoDeCompras.push({ produto: produtoNome, quantidade: qtd, valorTotal: subtotal });
+    carrinhoDeCompras.push({ produto: produto[0], quantidade: qtd, valorTotal: subtotal });
     atualizarInterfaceCarrinho();
 
-    document.getElementById('compra-produto').selectedIndex = 0;
+    if (inputProduto) inputProduto.value = '';
     document.getElementById('compra-qtd').value = 1;
     document.getElementById('compra-subtotal').value = '';
   }
@@ -278,26 +288,41 @@
   // 4. COMUNICAÇÃO COM O BACK-END (Google Apps Script)
   // =========================================================
 
+  function popularDatalistCompra(dados) {
+    const clientes = (dados && dados.clientes) ? dados.clientes : clientesGlobais;
+    const produtos = (dados && dados.produtos) ? dados.produtos : produtosGlobais;
+
+    const dlClientes = document.getElementById('lista-clientes-compra');
+    if (dlClientes) {
+      const clientesOrdenados = [...(clientes || [])].sort((a, b) => {
+        const nomeA = (a[0] || '').toString();
+        const nomeB = (b[0] || '').toString();
+        return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' });
+      });
+
+      dlClientes.innerHTML = clientesOrdenados.map(c => {
+        const val = c[1] || c[0];
+        const display = c[1] ? `${c[0]} (${c[1]})` : `${c[0]}`;
+        return `<option value="${val}">${display}</option>`;
+      }).join('');
+    }
+
+    const dlProdutos = document.getElementById('lista-produtos-compra');
+    if (dlProdutos) {
+      const produtosOrdenados = [...(produtos || [])].sort((a, b) => {
+        const nomeA = (a[0] || '').toString();
+        const nomeB = (b[0] || '').toString();
+        return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' });
+      });
+
+      dlProdutos.innerHTML = produtosOrdenados.map(p => `<option value="${p[0]}">`).join('');
+    }
+  }
+
   function carregarDadosCompra() {
     google.script.run.withSuccessHandler(dados => {
-      const selCliente = document.getElementById('compra-cliente');
-      selCliente.innerHTML = dados.clientes.length
-        ? '<option disabled selected value="">Selecione um cliente...</option>' + dados.clientes.map(c => {
-            const val = c[1] || c[0];
-            const display = c[1] ? `${c[0]} (${c[1]})` : `${c[0]} (Sem e-mail)`;
-            return `<option value="${val}">${display}</option>`;
-          }).join('')
-        : '<option disabled selected>Nenhum cliente cadastrado</option>';
-
       produtosGlobais = dados.produtos;
-      const selProduto = document.getElementById('compra-produto');
-      selProduto.innerHTML = dados.produtos.length
-        ? '<option disabled selected value="">Selecione um produto...</option>' + dados.produtos.map(p => {
-            const desc = p[2] ? ` (${p[2]})` : '';
-            return `<option value="${p[0]}">${p[0]} - R$ ${p[1]}${desc}</option>`;
-          }).join('')
-        : '<option disabled selected>Nenhum produto cadastrado</option>';
-
+      popularDatalistCompra(dados);
       document.getElementById('compra-subtotal').value = '';
     }).getDadosParaCompra();
   }
@@ -491,7 +516,12 @@
   function popularDatalistEstoque() {
     const datalist = document.getElementById('lista-produtos-estoque');
     if (datalist) {
-      datalist.innerHTML = (produtosGlobais || []).map(p => `<option value="${p[0]}">`).join('');
+      const produtosOrdenados = [...(produtosGlobais || [])].sort((a, b) => {
+        const nomeA = (a[0] || '').toString();
+        const nomeB = (b[0] || '').toString();
+        return nomeA.localeCompare(nomeB, 'pt-BR', { sensitivity: 'base' });
+      });
+      datalist.innerHTML = produtosOrdenados.map(p => `<option value="${p[0]}">`).join('');
     }
   }
 
@@ -806,12 +836,13 @@
   }
 
   function processarCarrinho() {
-    const cliente = document.getElementById('compra-cliente').value;
+    const inputCliente = document.getElementById('compra-cliente');
+    const cliente = (inputCliente ? inputCliente.value : '').trim();
     const metodoPagamento = document.getElementById('compra-pagamento').value;
     const descricaoVenda = document.getElementById('compra-desc').value;
     const acrescimo = parseFloat(document.getElementById('venda-acrescimo').value) || 0;
 
-    if (!cliente || cliente.includes("Carregando")) return showToast("Selecione um cliente para a compra.", false);
+    if (!cliente) return showToast("Selecione um cliente para a compra.", false);
     if (carrinhoDeCompras.length === 0) return showToast("Adicione pelo menos um item ao carrinho.", false);
 
     const txtLoading = idPedidoEdicao ? 'Salvando Alterações...' : 'Processando Venda...';
@@ -838,7 +869,9 @@
         idPedidoEdicao = null;
         atualizarInterfaceCarrinho();
         atualizarInterfaceCustosVenda();
-        document.getElementById('compra-cliente').selectedIndex = 0;
+        if (inputCliente) inputCliente.value = '';
+        const inputProduto = document.getElementById('compra-produto');
+        if (inputProduto) inputProduto.value = '';
         document.getElementById('compra-pagamento').selectedIndex = 0;
         document.getElementById('compra-desc').value = '';
         document.getElementById('venda-acrescimo').value = '';
@@ -945,10 +978,14 @@
     if (btnText) btnText.textContent = 'Finalizar Transação';
 
     // Limpa campos comuns
-    document.getElementById('compra-cliente').selectedIndex = 0;
+    const inputCliente = document.getElementById('compra-cliente');
+    if (inputCliente) inputCliente.value = '';
+    const inputProduto = document.getElementById('compra-produto');
+    if (inputProduto) inputProduto.value = '';
     document.getElementById('compra-pagamento').selectedIndex = 0;
     document.getElementById('compra-desc').value = '';
 
+    popularDatalistCompra();
     carregarDadosCompra(); // Carrega selects de clientes/produtos
   }
 
@@ -972,7 +1009,10 @@
     if (btnText) btnText.textContent = 'Finalizar Transação';
 
     // Limpa campos comuns
-    document.getElementById('compra-cliente').selectedIndex = 0;
+    const inputClienteVoltar = document.getElementById('compra-cliente');
+    if (inputClienteVoltar) inputClienteVoltar.value = '';
+    const inputProdutoVoltar = document.getElementById('compra-produto');
+    if (inputProdutoVoltar) inputProdutoVoltar.value = '';
     document.getElementById('compra-pagamento').selectedIndex = 0;
     document.getElementById('compra-desc').value = '';
 
@@ -1165,31 +1205,18 @@
     const btnText = document.querySelector('#btn-compra .btn-text');
     if (btnText) btnText.textContent = 'Salvar Alterações';
 
-    // 4. Carrega metadados (preenche selects de Clientes e Produtos) e depois seleciona o cliente correspondente
+    // 4. Carrega metadados (preenche datalists de Clientes e Produtos) e depois seleciona o cliente correspondente
     google.script.run.withSuccessHandler(dados => {
-      // Preenche clientes
-      const selCliente = document.getElementById('compra-cliente');
-      selCliente.innerHTML = dados.clientes.length
-        ? '<option disabled value="">Selecione um cliente...</option>' + dados.clientes.map(c => {
-            const val = c[1] || c[0];
-            const display = c[1] ? `${c[0]} (${c[1]})` : `${c[0]} (Sem e-mail)`;
-            return `<option value="${val}">${display}</option>`;
-          }).join('')
-        : '<option disabled selected>Nenhum cliente cadastrado</option>';
-
-      // Seleciona o cliente da venda (usa email se houver, senão nome)
-      const valCliente = venda[2] || venda[4];
-      selCliente.value = valCliente;
-
-      // Preenche produtos
       produtosGlobais = dados.produtos;
-      const selProduto = document.getElementById('compra-produto');
-      selProduto.innerHTML = dados.produtos.length
-        ? '<option disabled selected value="">Selecione um produto...</option>' + dados.produtos.map(p => {
-            const desc = p[2] ? ` (${p[2]})` : '';
-            return `<option value="${p[0]}">${p[0]} - R$ ${p[1]}${desc}</option>`;
-          }).join('')
-        : '<option disabled selected>Nenhum produto cadastrado</option>';
+      popularDatalistCompra(dados);
+
+      // Preenche o cliente da venda (usa email se houver, senão nome)
+      const valCliente = venda[2] || venda[4] || '';
+      const inputCliente = document.getElementById('compra-cliente');
+      if (inputCliente) inputCliente.value = valCliente;
+
+      const inputProduto = document.getElementById('compra-produto');
+      if (inputProduto) inputProduto.value = '';
 
       document.getElementById('compra-subtotal').value = '';
     }).getDadosParaCompra();
